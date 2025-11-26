@@ -32,6 +32,7 @@ interface CustomProps {
   name: string;
   label?: string;
   placeholder?: string;
+  inputType?: string;
   iconSrc?: string;
   iconAlt?: string;
   disabled?: boolean;
@@ -58,6 +59,7 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
           )}
           <FormControl>
             <Input
+              type={props.inputType}
               placeholder={props.placeholder}
               {...field}
               className="shad-input border-0"

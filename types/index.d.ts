@@ -7,6 +7,7 @@ declare type SearchParamProps = {
 
 declare type Gender = "Male" | "Female" | "Other";
 declare type Status = "pending" | "scheduled" | "cancelled";
+declare type BookingPurpose = "Business" | "Leisure" | "Group/Event";
 
 declare interface CreateUserParams {
   name: string;
@@ -55,3 +56,20 @@ declare type UpdateAppointmentParams = {
   appointment: Appointment;
   type: string;
 };
+
+declare interface CreateGuestParams {
+  name: string;
+  email: string;
+  phone: string;
+  purpose: BookingPurpose;
+}
+
+declare interface CreateBookingParams {
+  guestId: string;
+  roomId: string;
+  status: Status;
+  checkIn: Date;
+  checkOut: Date;
+  specialRequests?: string;
+  purpose?: BookingPurpose;
+}

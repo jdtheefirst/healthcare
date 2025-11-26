@@ -34,3 +34,37 @@ export interface Appointment extends Models.Document {
   userId: string;
   cancellationReason: string | null;
 }
+
+export interface Hotel extends Models.Document {
+  name: string;
+  location: string;
+  description?: string;
+}
+
+export interface Room extends Models.Document {
+  hotelId: string;
+  label: string;
+  type: string;
+  capacity: number;
+  amenities: string[];
+  rate: number;
+  availableFrom: Date;
+  availableTo: Date;
+}
+
+export interface Guest extends Models.Document {
+  name: string;
+  email: string;
+  phone: string;
+  purpose: string;
+}
+
+export interface Booking extends Models.Document {
+  guest: Guest;
+  room: Room;
+  status: Status;
+  checkIn: Date;
+  checkOut: Date;
+  specialRequests?: string;
+  channel: "web" | "sms" | "admin";
+}

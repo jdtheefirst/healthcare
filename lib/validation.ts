@@ -116,3 +116,33 @@ export function getAppointmentSchema(type: string) {
       return ScheduleAppointmentSchema;
   }
 }
+
+export const GuestInquirySchema = z.object({
+  fullName: z
+    .string()
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name must be at most 50 characters"),
+  email: z.string().email("Invalid email address"),
+  phone: z
+    .string()
+    .refine((phone) => /^\+\d{10,15}$/.test(phone), "Invalid phone number"),
+  guests: z.coerce
+    .number({ invalid_type_error: "Guest count is required" })
+    .min(1, "At least one guest is required")
+    .max(8, "Group bookings use the sales channel"),
+  bookingPurpose: z.enum(["Business", "Leisure", "Group/Event"]),
+  vipNotes: z.string().max(280, "Keep notes short").optional(),
+});
+
+export const HotelBookingSchema = z
+  .object({
+    roomType: z.string().min(2, "Pick a room type"),
+    checkIn: z.coerce.date(),
+    checkOut: z.coerce.date(),
+    channel: z.enum(["web", "sms", "admin"]).default("web"),
+    specialRequests: z.string().max(500, "Max 500 characters").optional(),
+  })
+  .refine((data) => data.checkOut > data.checkIn, {
+    message: "Check-out must be after check-in",
+    path: ["checkOut"],
+  });
