@@ -12,7 +12,7 @@ const HotelDemoPage = () => {
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-2 sm:px-[5%] py-12">
       <section className="grid gap-8 rounded-3xl border border-dark-400 bg-gradient-to-br from-green-600/30 to-blue-600/10 p-2 sm:p-8 md:grid-cols-[2fr,1fr]">
         <div className="space-y-4">
-          <p className="text-12-semibold uppercase text-green-500">
+          <p className="text-12-semibold uppercase text-green-500 p-2 sm:p-0">
             Northwind → Hotels
           </p>
           <h1 className="text-36-bold">

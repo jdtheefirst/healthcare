@@ -42,7 +42,9 @@ export const HotelGuestForm = () => {
         className="space-y-6 rounded-3xl border border-dark-400 bg-dark-300 p-2 sm:p-6 shadow-lg"
       >
         <section className="space-y-1">
-          <p className="text-12-semibold uppercase text-green-500">Guests</p>
+          <p className="text-12-semibold uppercase text-green-500 p-2 sm:p-0">
+            Guests
+          </p>
           <h2 className="text-18-bold">Guest registration</h2>
           <p className="text-14-regular text-dark-600">
             The exact patient onboarding form now geared for hospitality teams.
@@ -69,13 +71,12 @@ export const HotelGuestForm = () => {
             iconSrc="/assets/icons/email.svg"
             iconAlt="email"
           />
-
           <CustomFormField
             fieldType={FormFieldType.PHONE_INPUT}
             control={form.control}
             name="phone"
-            label="Phone"
-            placeholder="+1 555 000 0000"
+            label="Phone number"
+            placeholder="(555) 123-4567"
           />
         </div>
 

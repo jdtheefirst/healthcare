@@ -12,9 +12,9 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: "CarePulse",
+  title: "Clinics + Hotels Demo | Northwind Systems",
   description:
-    "A healthcare patient management System designed to streamline patient registration, appointment scheduling, and medical records management for healthcare providers.",
+    "Experience Northwind's versatility with our Clinics + Hotels demo, showcasing a seamless booking journey that transforms medical appointments into hotel reservations using the same robust Appwrite backend and SMS notifications.",
   icons: {
     icon: "/assets/icons/logo-icon.svg",
   },
@@ -27,6 +27,35 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Basic favicon */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+
+        {/* Modern browsers */}
+        <link
+          rel="icon"
+          href="/favicon-32x32.png"
+          type="image/png"
+          sizes="32x32"
+        />
+        <link
+          rel="icon"
+          href="/favicon-16x16.png"
+          type="image/png"
+          sizes="16x16"
+        />
+
+        {/* Apple Touch Icon */}
+        <link
+          rel="apple-touch-icon"
+          href="/apple-touch-icon.png"
+          type="image/png"
+          sizes="180x180"
+        />
+
+        {/* Android Chrome */}
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-dark-300 font-sans antialiased",

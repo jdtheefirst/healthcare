@@ -19,7 +19,7 @@ const Home = ({ searchParams }: SearchParamProps) => {
         <section className="grid gap-10 rounded-[32px] border border-dark-400 bg-gradient-to-br from-dark-300 to-black p-2 sm:p-8 lg:grid-cols-[1.1fr,0.9fr]">
           <div className="space-y-6">
             <div className="space-y-4">
-              <p className="text-12-semibold uppercase text-green-500">
+              <p className="text-12-semibold uppercase text-green-500 p-2 sm:p-0">
                 Clinics + Hotels
               </p>
               <h1 className="text-36-bold">
@@ -152,7 +152,7 @@ const Home = ({ searchParams }: SearchParamProps) => {
         <section className="rounded-[32px] border border-dark-400 bg-gradient-to-br from-dark-300 to-black p-2 sm:p-8">
           <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
             <div className="space-y-4">
-              <p className="text-12-semibold uppercase text-green-500">
+              <p className="text-12-semibold uppercase text-green-500 p-2 sm:p-0">
                 Hospitality Ready
               </p>
               <h2 className="text-32-bold">

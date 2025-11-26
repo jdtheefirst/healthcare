@@ -4,7 +4,7 @@ export const HotelFlowComparison = () => {
   return (
     <section className="space-y-6 rounded-3xl border border-dark-400 bg-black/40 p-2 sm:p-6">
       <div className="space-y-1">
-        <p className="text-12-semibold uppercase text-green-500">
+        <p className="text-12-semibold uppercase text-green-500 p-2 sm:p-0">
           Clinic flow ↔ Hotel flow
         </p>
         <h2 className="text-24-bold">One booking engine, two industries</h2>

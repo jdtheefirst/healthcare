@@ -4,13 +4,13 @@ export const HotelSellingPoints = () => {
   return (
     <section className="space-y-10 rounded-3xl border border-dark-400 bg-dark-200 p-2 sm:p-6">
       <div className="space-y-2">
-        <p className="text-12-semibold uppercase text-blue-500">
+        <p className="text-12-semibold uppercase text-blue-500 p-2 sm:p-0">
           Feature conversion
         </p>
         <h2 className="text-24-bold">Why Northwind clicks for hotels</h2>
         <p className="text-14-regular text-dark-600">
-          Show hoteliers the exact modules they inherit from the healthcare
-          stack—zero rebuild.
+          Showing the exact modules inherited from the healthcare stack—zero
+          rebuild.
         </p>
       </div>
 
