@@ -42,9 +42,7 @@ export const HotelGuestForm = () => {
         className="space-y-6 rounded-3xl border border-dark-400 bg-dark-300 p-2 sm:p-6 shadow-lg"
       >
         <section className="space-y-1">
-          <p className="text-12-semibold uppercase text-green-500">
-            Guests → Patients
-          </p>
+          <p className="text-12-semibold uppercase text-green-500">Guests</p>
           <h2 className="text-18-bold">Guest registration</h2>
           <p className="text-14-regular text-dark-600">
             The exact patient onboarding form now geared for hospitality teams.
@@ -115,7 +113,7 @@ export const HotelGuestForm = () => {
         />
 
         <div className="space-y-1 text-12-regular text-dark-600">
-          <p>✓ GDPR-compliant consent + SMS toggle reused from CarePulse.</p>
+          <p>✓ GDPR-compliant consent + SMS toggle reused from Clinic.</p>
           {statusMessage && <p className="text-green-500">{statusMessage}</p>}
         </div>
 

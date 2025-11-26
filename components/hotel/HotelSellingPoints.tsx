@@ -7,7 +7,7 @@ export const HotelSellingPoints = () => {
         <p className="text-12-semibold uppercase text-blue-500">
           Feature conversion
         </p>
-        <h2 className="text-24-bold">Why CarePulse clicks for hotels</h2>
+        <h2 className="text-24-bold">Why Northwind clicks for hotels</h2>
         <p className="text-14-regular text-dark-600">
           Show hoteliers the exact modules they inherit from the healthcare
           stack—zero rebuild.

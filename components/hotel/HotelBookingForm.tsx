@@ -55,9 +55,7 @@ export const HotelBookingForm = () => {
         className="space-y-6 rounded-3xl border border-dark-400 bg-dark-200/80 p-2 sm:p-6 shadow-lg backdrop-blur"
       >
         <section className="space-y-1">
-          <p className="text-12-semibold uppercase text-blue-500">
-            Rooms → Doctors
-          </p>
+          <p className="text-12-semibold uppercase text-blue-500">Rooms</p>
           <h2 className="text-18-bold">Booking preferences</h2>
           <p className="text-14-regular text-dark-600">
             Scheduling engine now points to `rooms` availability instead of

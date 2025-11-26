@@ -42,11 +42,11 @@ const HotelDemoPage = () => {
         </div>
         <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dark-400 bg-dark-200 p-6 text-center">
           <Image
-            src="/assets/images/admin.png"
+            src="/assets/images/onboarding-img.png"
             width={320}
             height={320}
             alt="Hotel admin"
-            className="rounded-xl border border-dark-400"
+            className="border border-dark-400"
           />
           <p className="text-14-regular text-dark-600">
             Clinic engine already speaks hotel: availability grids, SMS, and
