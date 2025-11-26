@@ -39,7 +39,7 @@ export const HotelGuestForm = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 rounded-3xl border border-dark-400 bg-dark-300 p-6 shadow-lg"
+        className="space-y-6 rounded-3xl border border-dark-400 bg-dark-300 p-2 sm:p-6 shadow-lg"
       >
         <section className="space-y-1">
           <p className="text-12-semibold uppercase text-green-500">
@@ -119,11 +119,13 @@ export const HotelGuestForm = () => {
           {statusMessage && <p className="text-green-500">{statusMessage}</p>}
         </div>
 
-        <SubmitButton className="w-full" isLoading={form.formState.isSubmitting}>
+        <SubmitButton
+          className="w-full"
+          isLoading={form.formState.isSubmitting}
+        >
           Save guest profile
         </SubmitButton>
       </form>
     </Form>
   );
 };
-

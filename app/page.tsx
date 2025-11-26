@@ -1,9 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { PatientForm } from "@/components/forms/PatientForm";
 import { PasskeyModal } from "@/components/PasskeyModal";
 import { DualFlowMap } from "@/constants";
+import { Button } from "@/components/ui/button";
 
 const Home = ({ searchParams }: SearchParamProps) => {
   const isAdmin = searchParams?.admin === "true";
@@ -14,16 +14,10 @@ const Home = ({ searchParams }: SearchParamProps) => {
     <div className="min-h-screen bg-black">
       {isAdmin && <PasskeyModal />}
 
-      <main className="mx-auto flex max-w-7xl flex-col gap-12 px-3 sm:px-6 py-10 lg:px-12">
-        <section className="grid gap-10 rounded-[32px] border border-dark-400 bg-gradient-to-br from-dark-300 to-black p-8 md:p-12 lg:grid-cols-[1.1fr,0.9fr]">
+      <main className="mx-auto flex max-w-7xl flex-col gap-12 px-3 sm:px-6 py-10">
+        {/* Hero Section */}
+        <section className="grid gap-10 rounded-[32px] border border-dark-400 bg-gradient-to-br from-dark-300 to-black p-2 sm:p-8 lg:grid-cols-[1.1fr,0.9fr]">
           <div className="space-y-6">
-            <Image
-              src="/assets/icons/logo-full.svg"
-              height={32}
-              width={162}
-              alt="CarePulse"
-              className="h-10 w-fit"
-            />
             <div className="space-y-4">
               <p className="text-12-semibold uppercase text-green-500">
                 Clinics + Hotels
@@ -37,35 +31,71 @@ const Home = ({ searchParams }: SearchParamProps) => {
                 cancellations, and SMS across both industries.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="#clinic-intake"
-                className="shad-primary-btn rounded-full px-6 py-3"
-              >
-                Start clinic onboarding
-              </Link>
-              <Link
-                href="/hotel-demo"
-                className="shad-gray-btn rounded-full px-6 py-3"
-              >
-                Explore hotel demo
-              </Link>
-              <Link
-                href="/features"
-                className="rounded-full border border-dark-500 px-6 py-3 text-green-500"
-              >
-                Compare features
-              </Link>
+
+            {/* Feature Highlights */}
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-2xl border border-dark-400 bg-dark-200/60 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <p className="text-12-semibold text-green-500">
+                    Unified Dashboard
+                  </p>
+                </div>
+                <p className="text-14-regular text-dark-600">
+                  Manage both clinics and hotels from one admin panel
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-dark-400 bg-dark-200/60 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <p className="text-12-semibold text-green-500">
+                    SMS Automation
+                  </p>
+                </div>
+                <p className="text-14-regular text-dark-600">
+                  Automatic confirmations and reminders for both industries
+                </p>
+              </div>
             </div>
+
+            {/* CTA Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Button asChild className="rounded-full w-full">
+                <Link href="#clinic-intake" className="shad-primary-btn">
+                  Start clinic onboarding
+                </Link>
+              </Button>
+
+              <Button asChild className="rounded-full w-full">
+                <Link href="/hotel-demo" className="shad-gray-btn">
+                  Explore hotel demo
+                </Link>
+              </Button>
+
+              <Button asChild variant="outline" className="rounded-full w-full">
+                <Link
+                  href="/features"
+                  className="border border-dark-500 text-green-500"
+                >
+                  Compare features
+                </Link>
+              </Button>
+            </div>
+
+            {/* Flow Preview */}
             <div className="grid gap-4 md:grid-cols-3">
               {flowPreview.map((item) => (
                 <div
                   key={item.clinic.title}
                   className="rounded-2xl border border-dark-400 bg-dark-200/60 p-4"
                 >
-                  <p className="text-12-semibold text-dark-600">
-                    {item.clinic.title}
-                  </p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500"></div>
+                    <p className="text-12-semibold text-dark-600">
+                      {item.clinic.title}
+                    </p>
+                  </div>
                   <p className="text-16-semibold text-green-500">
                     {item.hotel.title}
                   </p>
@@ -75,18 +105,34 @@ const Home = ({ searchParams }: SearchParamProps) => {
                 </div>
               ))}
             </div>
-            <div className="text-12-regular text-dark-600">
-              <p>
-                Need admin access? Use the passkey modal or head to
-                `/admin/dashboard` for dual metrics.
+
+            {/* Stats */}
+            <div className="rounded-2xl border border-dark-400 bg-dark-200/40 p-6">
+              <p className="text-12-semibold uppercase text-dark-600 mb-4">
+                Platform Stats
               </p>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                  <p className="text-20-bold text-green-500">100%</p>
+                  <p className="text-12-regular text-dark-600">Uptime</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-20-bold text-green-500">24/7</p>
+                  <p className="text-12-regular text-dark-600">Bookings</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-20-bold text-green-500">2-in-1</p>
+                  <p className="text-12-regular text-dark-600">Systems</p>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Clinic Booking Form */}
           <div className="space-y-6">
             <div
               id="clinic-intake"
-              className="rounded-3xl border border-dark-400 bg-dark-200/80 p-6 backdrop-blur"
+              className="rounded-3xl border border-dark-400 bg-dark-200/80 p-2 sm:p-6 backdrop-blur"
             >
               <div className="mb-6 space-y-1">
                 <p className="text-12-semibold uppercase text-dark-600">
@@ -94,49 +140,91 @@ const Home = ({ searchParams }: SearchParamProps) => {
                 </p>
                 <h2 className="text-24-bold">Book your next appointment</h2>
                 <p className="text-14-regular text-dark-600">
-                  Same intake form as before—now positioned as the clinic
-                  pathway.
+                  The clinic pathway.
                 </p>
               </div>
               <PatientForm />
             </div>
+          </div>
+        </section>
 
-            <div className="rounded-3xl border border-dark-400 bg-dark-300 p-6">
-              <div className="space-y-2">
+        {/* Hotel Pathway Section */}
+        <section className="rounded-[32px] border border-dark-400 bg-gradient-to-br from-dark-300 to-black p-2 sm:p-8">
+          <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
+            <div className="space-y-4">
+              <p className="text-12-semibold uppercase text-green-500">
+                Hospitality Ready
+              </p>
+              <h2 className="text-32-bold">
+                Same booking engine, different industry
+              </h2>
+              <p className="text-16-regular text-dark-700">
+                Transform your clinic booking system into a powerful hotel
+                management platform without rewriting core logic.
+              </p>
+
+              <div className="grid gap-3 pt-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <p className="text-14-regular text-dark-600">
+                    Patients → Guests | Doctors → Rooms
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <p className="text-14-regular text-dark-600">
+                    Appointments → Bookings | Medical notes → Special requests
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                  <p className="text-14-regular text-dark-600">
+                    Same SMS notifications, different templates
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-dark-400 bg-dark-300 p-2 sm:p-6">
+              <div className="space-y-4">
                 <p className="text-12-semibold uppercase text-green-500">
                   Hotels
                 </p>
-                <h2 className="text-18-bold">Need room scheduling instead?</h2>
+                <h3 className="text-20-bold">Ready for room scheduling?</h3>
                 <p className="text-14-regular text-dark-600">
                   Reuse the same booking engine to capture guests, assign rooms,
                   and follow-up via SMS/email.
                 </p>
-              </div>
-              <div className="mt-4 grid gap-3">
-                <Link
-                  href="/hotel-demo"
-                  className="shad-primary-btn rounded-full px-4 py-2 text-center"
-                >
-                  View hotel booking flow
-                </Link>
-                <Link
-                  href="/admin/dashboard"
-                  className="shad-gray-btn rounded-full px-4 py-2 text-center"
-                >
-                  Dual admin dashboard
-                </Link>
-                <Link
-                  href="/features"
-                  className="rounded-full border border-dark-500 px-4 py-2 text-center text-green-500"
-                >
-                  See shared components
-                </Link>
+
+                <div className="flex flex-col gap-3 pt-2">
+                  <Button asChild className="rounded-full w-full">
+                    <Link href="/hotel-demo" className="shad-primary-btn">
+                      View hotel booking flow
+                    </Link>
+                  </Button>
+
+                  <Button asChild className="rounded-full w-full">
+                    <Link href="/admin/dashboard" className="shad-gray-btn">
+                      Dual admin dashboard
+                    </Link>
+                  </Button>
+
+                  <Button asChild className="rounded-full w-full">
+                    <Link
+                      href="/features"
+                      className="border border-dark-500 text-green-500 hover:bg-dark-400 transition-colors"
+                    >
+                      See shared components
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="rounded-[32px] border border-dark-400 bg-dark-200/60 p-8">
+        {/* Shared Components Section */}
+        <section className="rounded-[32px] border border-dark-400 bg-dark-200/60 p-2 sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-12-semibold uppercase text-dark-600">
@@ -154,7 +242,7 @@ const Home = ({ searchParams }: SearchParamProps) => {
             </Link>
           </div>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
-            <article className="rounded-2xl border border-dark-400 bg-dark-300 p-5">
+            <article className="rounded-2xl border border-dark-400 bg-dark-300 p-2 sm:p-5">
               <p className="text-12-semibold uppercase text-green-500">
                 Scheduling & availability
               </p>
@@ -164,7 +252,7 @@ const Home = ({ searchParams }: SearchParamProps) => {
                 inventory without rewriting validation.
               </p>
             </article>
-            <article className="rounded-2xl border border-dark-400 bg-dark-300 p-5">
+            <article className="rounded-2xl border border-dark-400 bg-dark-300 p-2 sm:p-5">
               <p className="text-12-semibold uppercase text-blue-500">
                 Notifications
               </p>
@@ -174,7 +262,7 @@ const Home = ({ searchParams }: SearchParamProps) => {
                 cancellations for both clinics and hotels.
               </p>
             </article>
-            <article className="rounded-2xl border border-dark-400 bg-dark-300 p-5">
+            <article className="rounded-2xl border border-dark-400 bg-dark-300 p-2 sm:p-5">
               <p className="text-12-semibold uppercase text-red-500">
                 Admin workflow
               </p>
@@ -187,14 +275,33 @@ const Home = ({ searchParams }: SearchParamProps) => {
           </div>
         </section>
 
+        {/* Footer */}
         <footer className="flex flex-wrap items-center justify-between gap-4 border-t border-dark-400 pt-6 text-14-regular text-dark-600">
-          <p>© 2024 CarePulse — industry-agnostic booking OS.</p>
+          <Link
+            href={"https://northwind.yunobase.com/products/healthcare-system"}
+            target="_blank"
+          >
+            © {new Date().getFullYear()} Northwind — industry-agnostic booking
+            OS.
+          </Link>
           <div className="flex gap-4">
-            <Link href="/?admin=true" className="text-green-500">
+            <Link
+              href="/?admin=true"
+              className="text-green-500 hover:text-green-400 transition-colors"
+            >
               Admin access
             </Link>
-            <Link href="/features" className="text-green-500">
+            <Link
+              href="/features"
+              className="text-green-500 hover:text-green-400 transition-colors"
+            >
               Features
+            </Link>
+            <Link
+              href="/hotel-demo"
+              className="text-green-500 hover:text-green-400 transition-colors"
+            >
+              Hotel Demo
             </Link>
           </div>
         </footer>

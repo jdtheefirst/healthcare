@@ -2,7 +2,7 @@ import { AdaptableComponents, HotelRoomTypes } from "@/constants";
 
 export const HotelSellingPoints = () => {
   return (
-    <section className="space-y-10 rounded-3xl border border-dark-400 bg-dark-200 p-6">
+    <section className="space-y-10 rounded-3xl border border-dark-400 bg-dark-200 p-2 sm:p-6">
       <div className="space-y-2">
         <p className="text-12-semibold uppercase text-blue-500">
           Feature conversion
@@ -18,7 +18,7 @@ export const HotelSellingPoints = () => {
         {HotelRoomTypes.map((room) => (
           <article
             key={room.id}
-            className="rounded-2xl border border-dark-400 bg-dark-300 p-5"
+            className="rounded-2xl border border-dark-400 bg-dark-300 p-3 sm:p-6"
           >
             <p className="text-12-semibold uppercase text-green-500">
               {room.type}
@@ -50,4 +50,3 @@ export const HotelSellingPoints = () => {
     </section>
   );
 };
-

@@ -2,7 +2,7 @@ import { DualFlowMap } from "@/constants";
 
 export const HotelFlowComparison = () => {
   return (
-    <section className="space-y-6 rounded-3xl border border-dark-400 bg-black/40 p-6">
+    <section className="space-y-6 rounded-3xl border border-dark-400 bg-black/40 p-2 sm:p-6">
       <div className="space-y-1">
         <p className="text-12-semibold uppercase text-green-500">
           Clinic flow ↔ Hotel flow
@@ -18,7 +18,7 @@ export const HotelFlowComparison = () => {
         {DualFlowMap.map((pair) => (
           <div
             key={pair.clinic.title}
-            className="grid gap-6 bg-dark-300 p-6 md:grid-cols-3"
+            className="grid gap-6 bg-dark-300 p-2 sm:p-6 md:grid-cols-3"
           >
             <div>
               <p className="text-12-semibold text-dark-600">Clinic</p>
@@ -45,4 +45,3 @@ export const HotelFlowComparison = () => {
     </section>
   );
 };
-

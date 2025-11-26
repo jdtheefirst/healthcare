@@ -52,7 +52,7 @@ export const HotelBookingForm = () => {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 rounded-3xl border border-dark-400 bg-dark-200/80 p-6 shadow-lg backdrop-blur"
+        className="space-y-6 rounded-3xl border border-dark-400 bg-dark-200/80 p-2 sm:p-6 shadow-lg backdrop-blur"
       >
         <section className="space-y-1">
           <p className="text-12-semibold uppercase text-blue-500">
@@ -74,12 +74,10 @@ export const HotelBookingForm = () => {
         >
           {HotelRoomTypes.map((room) => (
             <SelectItem key={room.id} value={room.name}>
-              <div className="flex flex-col">
-                <span className="text-14-medium">{room.name}</span>
-                <span className="text-12-regular text-dark-600">
-                  Sleeps {room.capacity} • ${room.rate}/night
-                </span>
-              </div>
+              <span className="text-14-medium">{room.name}</span>
+              <span className="text-12-regular text-dark-600 pl-2">
+                Sleeps {room.capacity} • ${room.rate}/night
+              </span>
             </SelectItem>
           ))}
         </CustomFormField>
@@ -109,30 +107,30 @@ export const HotelBookingForm = () => {
           placeholder="Hypoallergenic bedding, minibar removal, airport transfers…"
         />
 
-        <section className="rounded-2xl border border-dark-500 bg-dark-400 p-4 text-14-regular text-dark-600">
+        <section className="rounded-2xl border border-dark-500 bg-dark-400 p-2 sm:p-4 text-7-regular sm:text-14-regular text-dark-600 text-xs">
           <p>
-            ✓ SMS & email notifications already wired: `{formatDateTime(
-              form.watch("checkIn")
-            ).dateDay}` check-in reminder mirrors appointment reminder.
+            ✓ SMS & email notifications already wired: `
+            {formatDateTime(form.watch("checkIn")).dateDay}` check-in reminder
+            mirrors appointment reminder.
           </p>
           <p className="mt-2">
             ✓ {stayLength || 1} night stay auto-syncs with payment intent logic.
           </p>
           {selectedRoom && (
-            <p className="mt-2 text-white">
-              {selectedRoom.description}
-            </p>
+            <p className="mt-2 text-white">{selectedRoom.description}</p>
           )}
           {statusMessage && (
             <p className="mt-2 text-green-500">{statusMessage}</p>
           )}
         </section>
 
-        <SubmitButton className="w-full" isLoading={form.formState.isSubmitting}>
+        <SubmitButton
+          className="w-full"
+          isLoading={form.formState.isSubmitting}
+        >
           Hold room & send confirmation
         </SubmitButton>
       </form>
     </Form>
   );
 };
-
