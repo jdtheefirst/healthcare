@@ -82,7 +82,7 @@ Follow these steps to set up the project locally:
 
 **Installation**
 
-```bash
+```
 # Clone the repository
 git clone [your-repo-url]
 cd [project-name]
@@ -93,8 +93,6 @@ npm install
 # Set up environment variables
 cp .env.example .env.local
 ```
-
-````
 
 **Environment Configuration**
 
@@ -191,5 +189,3 @@ The application is optimized for deployment on Vercel, Netlify, or any Node.js h
 <div align="center">
   <p><em>One booking engine, multiple industries - transforming how clinics and hotels manage appointments and bookings.</em></p>
 </div>
-```
-````
