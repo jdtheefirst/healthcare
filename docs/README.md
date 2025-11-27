@@ -1,6 +1,6 @@
-# CarePulse Documentation Suite
+# Documentation Suite
 
-Welcome to the CarePulse documentation. This collection of guides helps you present and explain the CarePulse platform to both healthcare clinics and hotels.
+Welcome to the documentation. This collection of guides helps present and explain the platform to both healthcare clinics and hotels.
 
 ---
 
@@ -130,6 +130,6 @@ For questions about:
 
 ---
 
-*Last Updated: [Current Date]*  
+*Last Updated: Thursday 27th 2025*  
 *Version: 1.0*
 
