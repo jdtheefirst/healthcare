@@ -1,4 +1,4 @@
-# CarePulse Platform: Dual-Industry Booking Management System
+# Dual-Industry Booking Management System
 
 ## One Platform, Two Industries, Unlimited Possibilities
 
@@ -258,5 +258,5 @@ See: [Hotel System Guide](./HOTEL_SYSTEM_GUIDE.md)
 
 ---
 
-*CarePulse: One platform, multiple industries, unlimited possibilities.*
+*One platform, multiple industries, unlimited possibilities.*
 
