@@ -98,7 +98,7 @@ export const AdminDualTabs = ({
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <MetricCard
-              label="Scheduled appointments"
+              label="Scheduled"
               value={clinicCounts.scheduledCount}
               accent="green"
             />
@@ -137,8 +137,8 @@ export const AdminDualTabs = ({
             />
           </div>
           <p className="mt-4 text-12-regular text-dark-600">
-            SMS sent this week: {HotelMetricSnapshot.smsSentThisWeek} • Payment-ready
-            deposits: {HotelMetricSnapshot.confirmed}
+            SMS sent this week: {HotelMetricSnapshot.smsSentThisWeek} •
+            Payment-ready deposits: {HotelMetricSnapshot.confirmed}
           </p>
         </div>
       </div>
@@ -153,4 +153,3 @@ export const AdminDualTabs = ({
     </section>
   );
 };
-

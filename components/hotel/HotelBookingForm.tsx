@@ -1,10 +1,12 @@
+// components/HotelBookingForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import Link from "next/link";
 
 import { HotelRoomTypes } from "@/constants";
 import {
@@ -12,10 +14,10 @@ import {
   getGuestByEmail,
   updateBooking,
 } from "@/lib/actions/hotel.actions";
-import { getAllRooms, getRoomByName } from "@/lib/actions/room.actions";
+import { getAllHotels, getRoomsByHotel } from "@/lib/actions/hotel.actions";
 import { formatDateTime } from "@/lib/utils";
 import { CancelBookingSchema, HotelBookingSchema } from "@/lib/validation";
-import { Booking } from "@/types/appwrite.types";
+import { Booking, Room, Hotel } from "@/types/appwrite.types";
 
 import CustomFormField, { FormFieldType } from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
@@ -38,13 +40,21 @@ export const HotelBookingForm = ({
   setOpen,
 }: HotelBookingFormProps = {}) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [guestEmail, setGuestEmail] = useState<string | null>(
     propGuestEmail || null
   );
-  const [rooms, setRooms] = useState<any[]>([]);
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [rooms, setRooms] = useState<(Room | any)[]>([]);
+  const [selectedHotelId, setSelectedHotelId] = useState<string>("");
   const [useRealRooms, setUseRealRooms] = useState(false);
+  const [selectedRoomState, setSelectedRoomState] = useState<Room | any>(null);
+
+  // Get preselected room from URL
+  const preselectedRoomId = searchParams?.get("roomId");
+  const preselectedRoomName = searchParams?.get("roomName");
 
   // Get guest info from sessionStorage if available
   useEffect(() => {
@@ -56,25 +66,72 @@ export const HotelBookingForm = ({
     }
   }, [propGuestEmail]);
 
-  // Fetch rooms from Appwrite on mount
+  // Single useEffect to handle data fetching
   useEffect(() => {
-    const fetchRooms = async () => {
+    const fetchData = async () => {
       try {
-        const appwriteRooms = await getAllRooms();
-        if (appwriteRooms && appwriteRooms.length > 0) {
-          setRooms(appwriteRooms);
-          setUseRealRooms(true);
+        // Fetch all hotels
+        const appwriteHotels = await getAllHotels();
+        setHotels(appwriteHotels as Hotel[]);
+
+        let defaultHotelId = "";
+        let fetchedRooms: (Room | any)[] = [];
+        let hasRealRooms = false;
+
+        if (appwriteHotels.length > 0) {
+          // Set first hotel as default
+          const firstHotel = appwriteHotels[0] as Hotel;
+          defaultHotelId = firstHotel.$id;
+          setSelectedHotelId(defaultHotelId);
+
+          // Fetch rooms for the first hotel
+          const hotelRooms = await getRoomsByHotel(defaultHotelId);
+          if (hotelRooms.length > 0) {
+            fetchedRooms = hotelRooms as Room[];
+            hasRealRooms = true;
+          } else {
+            // Fallback to constants if no rooms
+            fetchedRooms = HotelRoomTypes;
+          }
         } else {
-          // Fallback to constants if no rooms in Appwrite
-          setRooms(HotelRoomTypes);
+          // No hotels, use constants
+          fetchedRooms = HotelRoomTypes;
+        }
+
+        setRooms(fetchedRooms);
+        setUseRealRooms(hasRealRooms);
+
+        // Handle preselected room
+        if (preselectedRoomId && hasRealRooms) {
+          const room = fetchedRooms.find((r) => r.$id === preselectedRoomId);
+          if (room) {
+            setSelectedRoomState(room);
+            form.setValue("roomType", getRoomLabel(room));
+          }
+        } else if (preselectedRoomName) {
+          const room = fetchedRooms.find(
+            (r) =>
+              getRoomLabel(r) === preselectedRoomName ||
+              r.name === preselectedRoomName
+          );
+          if (room) {
+            setSelectedRoomState(room);
+            form.setValue("roomType", getRoomLabel(room));
+          }
         }
       } catch (error) {
-        console.error("Error fetching rooms:", error);
+        console.error("Error fetching data:", error);
         setRooms(HotelRoomTypes);
       }
     };
-    fetchRooms();
-  }, []);
+
+    fetchData();
+  }, [preselectedRoomId, preselectedRoomName]);
+
+  // Helper function to safely get room label
+  const getRoomLabel = (room: Room | any): string => {
+    return room.label || room.name || "Unknown Room";
+  };
 
   const availableRooms = useRealRooms ? rooms : HotelRoomTypes;
   const firstRoom = availableRooms[0];
@@ -91,10 +148,10 @@ export const HotelBookingForm = ({
             cancellationReason: "",
           }
         : {
-            roomType:
-              booking && (booking.room as any)?.label
-                ? (booking.room as any).label
-                : firstRoom?.name || "",
+            hotelId: selectedHotelId,
+            roomType: selectedRoomState
+              ? getRoomLabel(selectedRoomState)
+              : booking?.roomType || firstRoom?.name || "",
             checkIn: booking
               ? new Date(booking.checkIn)
               : new Date(Date.now() + 86400000),
@@ -106,10 +163,111 @@ export const HotelBookingForm = ({
           },
   });
 
-  const selectedRoom = availableRooms.find(
-    (room) => room.name === form.watch("roomType") || room.label === form.watch("roomType")
-  );
+  // Use selectedRoomState instead of recalculating selectedRoom
+  const displayRoom =
+    selectedRoomState ||
+    availableRooms.find(
+      (room) => getRoomLabel(room) === form.watch("roomType")
+    );
 
+  // Separate handlers for each form type
+  const handleCancelBooking = async (values: {
+    cancellationReason: string;
+  }) => {
+    if (!booking) throw new Error("Booking is required for cancellation");
+
+    const updated = await updateBooking({
+      bookingId: booking.$id,
+      booking: {
+        cancellationReason: values.cancellationReason,
+      },
+      type: "cancel",
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+
+    if (updated) {
+      setStatusMessage("✓ Booking cancelled successfully.");
+      setOpen?.(false);
+      setTimeout(() => {
+        router.refresh();
+      }, 1000);
+    }
+  };
+
+  const handleScheduleBooking = async (
+    values: z.infer<typeof HotelBookingSchema>
+  ) => {
+    if (!booking) throw new Error("Booking is required for scheduling");
+
+    const updated = await updateBooking({
+      bookingId: booking.$id,
+      booking: {},
+      type: "schedule",
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    });
+
+    if (updated) {
+      setStatusMessage("✓ Booking confirmed! SMS notification sent.");
+      setOpen?.(false);
+      setTimeout(() => {
+        router.refresh();
+      }, 1000);
+    }
+  };
+
+  const handleCreateBooking = async (
+    values: z.infer<typeof HotelBookingSchema>
+  ) => {
+    let finalGuestId = guestId;
+    if (!finalGuestId && typeof window !== "undefined") {
+      finalGuestId = sessionStorage.getItem("hotelGuestId") || undefined;
+    }
+
+    if (!finalGuestId && guestEmail) {
+      const existingGuest = await getGuestByEmail(guestEmail);
+      if (existingGuest) {
+        finalGuestId = existingGuest.$id;
+      }
+    }
+
+    // Use the selected room from form
+    const roomId =
+      selectedRoomState?.$id || selectedRoomState?.id || values.roomType;
+    const roomType = getRoomLabel(selectedRoomState) || values.roomType;
+
+    const newBooking = await createBooking({
+      guestId: finalGuestId,
+      roomId: roomId,
+      roomType: roomType,
+      hotelId: selectedHotelId,
+      status: "pending",
+      checkIn: values.checkIn,
+      checkOut: values.checkOut,
+      specialRequests: values.specialRequests || "",
+      channel: values.channel || "web",
+      guestEmail: guestEmail || undefined,
+      guestName: sessionStorage.getItem("hotelGuestName") || undefined,
+      guestPhone: sessionStorage.getItem("hotelGuestPhone") || undefined,
+      purpose: "Leisure",
+    });
+
+    if (newBooking) {
+      setStatusMessage(
+        "✓ Booking created! Admin will confirm and send SMS notification."
+      );
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("hotelGuestId");
+        sessionStorage.removeItem("hotelGuestEmail");
+        sessionStorage.removeItem("hotelGuestName");
+        sessionStorage.removeItem("hotelGuestPhone");
+      }
+      setTimeout(() => {
+        router.push(`/hotel-demo/success?bookingId=${newBooking.$id}`);
+      }, 2000);
+    }
+  };
+
+  // Main onSubmit function
   const onSubmit = async (values: z.infer<typeof BookingFormValidation>) => {
     setIsLoading(true);
     setStatusMessage(
@@ -121,94 +279,22 @@ export const HotelBookingForm = ({
     );
 
     try {
-      if (type === "cancel") {
-        // Cancel booking
-        if (!booking) throw new Error("Booking is required for cancellation");
-
-        const updated = await updateBooking({
-          bookingId: booking.$id,
-          booking: {
-            cancellationReason: (values as any).cancellationReason,
-          },
-          type: "cancel",
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        });
-
-        if (updated) {
-          setStatusMessage("✓ Booking cancelled successfully.");
-          setOpen && setOpen(false);
-          setTimeout(() => {
-            router.refresh();
-          }, 1000);
-        }
-      } else if (type === "schedule") {
-        // Schedule/confirm booking
-        if (!booking) throw new Error("Booking is required for scheduling");
-
-        const updated = await updateBooking({
-          bookingId: booking.$id,
-          booking: {},
-          type: "schedule",
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        });
-
-        if (updated) {
-          setStatusMessage("✓ Booking confirmed! SMS notification sent.");
-          setOpen && setOpen(false);
-          setTimeout(() => {
-            router.refresh();
-          }, 1000);
-        }
-      } else {
-        // Create new booking
-        let finalGuestId = guestId;
-        if (!finalGuestId && typeof window !== "undefined") {
-          finalGuestId = sessionStorage.getItem("hotelGuestId") || undefined;
-        }
-
-        if (!finalGuestId && guestEmail) {
-          const existingGuest = await getGuestByEmail(guestEmail);
-          if (existingGuest) {
-            finalGuestId = existingGuest.$id;
-          }
-        }
-
-        // Get room ID from Appwrite if using real rooms
-        let roomId = selectedRoom?.id || (values as any).roomType;
-        if (useRealRooms && selectedRoom?.$id) {
-          roomId = selectedRoom.$id;
-        } else if (useRealRooms) {
-          // Try to find room by name
-          const roomDoc = await getRoomByName((values as any).roomType);
-          if (roomDoc) {
-            roomId = roomDoc.$id;
-          }
-        }
-
-        const newBooking = await createBooking({
-          guestId: finalGuestId,
-          roomId: roomId,
-          status: "pending",
-          checkIn: (values as any).checkIn,
-          checkOut: (values as any).checkOut,
-          specialRequests: (values as any).specialRequests || "",
-          channel: (values as any).channel || "web",
-          roomType: (values as any).roomType,
-          guestEmail: guestEmail || undefined,
-        });
-
-        if (newBooking) {
-          setStatusMessage(
-            "✓ Booking created! Admin will confirm and send SMS notification."
+      switch (type) {
+        case "cancel":
+          await handleCancelBooking(values as { cancellationReason: string });
+          break;
+        case "schedule":
+          await handleScheduleBooking(
+            values as z.infer<typeof HotelBookingSchema>
           );
-          if (typeof window !== "undefined") {
-            sessionStorage.removeItem("hotelGuestId");
-            sessionStorage.removeItem("hotelGuestEmail");
-          }
-          setTimeout(() => {
-            router.push(`/hotel-demo/success?bookingId=${newBooking.$id}`);
-          }, 2000);
-        }
+          break;
+        case "create":
+          await handleCreateBooking(
+            values as z.infer<typeof HotelBookingSchema>
+          );
+          break;
+        default:
+          throw new Error(`Unknown booking type: ${type}`);
       }
     } catch (error) {
       console.error(`Error ${type}ing booking:`, error);
@@ -234,39 +320,105 @@ export const HotelBookingForm = ({
       >
         <section className="space-y-1">
           <p className="text-12-semibold uppercase text-blue-500 p-2 sm:p-0">
-            Rooms
+            Hotels & Rooms
           </p>
           <h2 className="text-18-bold">Booking preferences</h2>
           <p className="text-14-regular text-dark-600">
-            Scheduling engine now points to `rooms` availability instead of
-            physician calendars.
+            Select your hotel and room preferences.
           </p>
         </section>
 
-        {type !== "cancel" && (
+        {/* Selected Room Display */}
+        {selectedRoomState && (
+          <div className="rounded-2xl border border-green-500 bg-green-500/10 p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-14-semibold text-green-500">Selected Room</p>
+                <p className="text-16-bold">
+                  {getRoomLabel(selectedRoomState)}
+                </p>
+                <p className="text-14-regular text-dark-600">
+                  ${selectedRoomState.rate || selectedRoomState.pricePerNight}
+                  /night • Sleeps {selectedRoomState.capacity}
+                </p>
+              </div>
+              <Link
+                href="/rooms"
+                className="shad-gray-btn rounded-full px-4 py-2 text-sm"
+              >
+                Change Room
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Browse Rooms CTA */}
+        {!selectedRoomState && (
+          <div className="rounded-2xl border border-dark-500 bg-dark-400 p-6 text-center">
+            <p className="text-14-regular text-dark-600 mb-4">
+              Browse our available rooms to get started
+            </p>
+            <Link
+              href="/rooms"
+              className="shad-primary-btn rounded-full px-6 py-3 inline-block"
+            >
+              Browse Available Rooms
+            </Link>
+          </div>
+        )}
+
+        {/* Hotel Selection */}
+        {hotels.length > 0 && type !== "cancel" && (
           <CustomFormField
             fieldType={FormFieldType.SELECT}
             control={form.control}
-            name="roomType"
-            label="Room / room type"
-            placeholder="Select a room"
+            name="hotelId"
+            label="Select Hotel"
+            placeholder="Choose a hotel"
             disabled={type === "schedule"}
+            onValueChange={(value) => setSelectedHotelId(value)}
           >
-            {availableRooms.map((room) => (
-              <SelectItem
-                key={room.$id || room.id}
-                value={room.label || room.name}
-              >
-                <span className="text-14-medium">{room.label || room.name}</span>
+            {hotels.map((hotel) => (
+              <SelectItem key={hotel.$id} value={hotel.$id}>
+                <span className="text-14-medium">{hotel.name}</span>
                 <span className="text-12-regular text-dark-600 pl-2">
-                  Sleeps {room.capacity} • ${room.rate}/night
+                  {hotel.location}
                 </span>
               </SelectItem>
             ))}
           </CustomFormField>
         )}
 
-        {type !== "cancel" && (
+        {/* Room Selection Dropdown (only show if no room is preselected) */}
+        {!selectedRoomState && type !== "cancel" && (
+          <CustomFormField
+            fieldType={FormFieldType.SELECT}
+            control={form.control}
+            name="roomType"
+            label="Room / room type"
+            placeholder="Select a room"
+            disabled={type === "schedule" || rooms.length === 0}
+            onValueChange={(value) => {
+              const room = availableRooms.find(
+                (r) => getRoomLabel(r) === value
+              );
+              setSelectedRoomState(room);
+            }}
+          >
+            {availableRooms.map((room) => (
+              <SelectItem key={room.$id || room.id} value={getRoomLabel(room)}>
+                <span className="text-14-medium">{getRoomLabel(room)}</span>
+                <span className="text-12-regular text-dark-600 pl-2">
+                  Sleeps {room.capacity} • ${room.rate || room.pricePerNight}
+                  /night
+                </span>
+              </SelectItem>
+            ))}
+          </CustomFormField>
+        )}
+
+        {/* Date Pickers and Special Requests (only show if a room is selected) */}
+        {selectedRoomState && type !== "cancel" && (
           <>
             <div className="flex flex-col gap-6 md:flex-row">
               <CustomFormField
@@ -317,8 +469,8 @@ export const HotelBookingForm = ({
           <p className="mt-2">
             ✓ {stayLength || 1} night stay auto-syncs with payment intent logic.
           </p>
-          {selectedRoom && (
-            <p className="mt-2 text-white">{selectedRoom.description}</p>
+          {selectedRoomState && selectedRoomState.description && (
+            <p className="mt-2 text-white">{selectedRoomState.description}</p>
           )}
           {statusMessage && (
             <p className="mt-2 text-green-500">{statusMessage}</p>

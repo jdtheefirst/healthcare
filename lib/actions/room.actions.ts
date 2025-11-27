@@ -15,6 +15,15 @@ import { parseStringify } from "../utils";
 
 // SYNC ROOMS FROM CONSTANTS TO APPWRITE
 // This ensures HotelRoomTypes constants are backed by real room documents
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "")
+    .replace(/-+/g, "-")
+    .trim();
+}
+
 export const syncRoomsToAppwrite = async (hotelId?: string) => {
   try {
     // Get or create default hotel if hotelId not provided
@@ -27,7 +36,7 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
       if (hotels.documents.length > 0) {
         defaultHotelId = hotels.documents[0].$id;
       } else {
-        // Create default hotel
+        // Create default hotel with slug
         const newHotel = await databases.createDocument(
           DATABASE_ID!,
           HOTEL_COLLECTION_ID!,
@@ -36,6 +45,7 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
             name: "CareStay Hotel",
             location: "Default Location",
             description: "Default hotel for room management",
+            slug: "carestay-hotel", // Add slug for hotel too if required
           }
         );
         defaultHotelId = newHotel.$id;
@@ -46,27 +56,28 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
       throw new Error("Hotel ID is required. Please create a hotel first.");
     }
 
-    const syncedRooms: Room[] = [];
+    const syncedRooms: any[] = [];
 
     // For each room type in constants, create or update room document
     for (const roomType of HotelRoomTypes) {
       try {
-        // Check if room already exists by matching the ID or name
+        const roomSlug = generateSlug(roomType.name);
+
+        // Check if room already exists by matching the slug or name
         const existingRooms = await databases.listDocuments(
           DATABASE_ID!,
           ROOM_COLLECTION_ID!,
           [
-            Query.or([
-              Query.equal("label", [roomType.name]),
-              Query.equal("type", [roomType.type]),
-            ]),
+            Query.equal("slug", roomSlug),
+            Query.equal("label", roomType.name),
+            Query.equal("type", roomType.type),
           ]
         );
 
-        let room: Room;
+        let room;
         if (existingRooms.documents.length > 0) {
           // Update existing room
-          room = (await databases.updateDocument(
+          room = await databases.updateDocument(
             DATABASE_ID!,
             ROOM_COLLECTION_ID!,
             existingRooms.documents[0].$id,
@@ -74,16 +85,21 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
               hotelId: defaultHotelId,
               label: roomType.name,
               type: roomType.type,
+              slug: roomSlug, // Add slug to update as well
               capacity: roomType.capacity,
               amenities: roomType.amenities || [],
               rate: roomType.rate,
-              availableFrom: new Date(), // Available now
-              availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // Available for 1 year
+              pricePerNight: roomType.rate,
+              bedCount: Math.ceil(roomType.capacity / 2),
+              floorNumber: 1,
+              availabilityStatus: "available",
+              availableFrom: new Date(),
+              availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
             }
-          )) as Room;
+          );
         } else {
-          // Create new room
-          room = (await databases.createDocument(
+          // Create new room with required slug
+          room = await databases.createDocument(
             DATABASE_ID!,
             ROOM_COLLECTION_ID!,
             ID.unique(),
@@ -91,16 +107,22 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
               hotelId: defaultHotelId,
               label: roomType.name,
               type: roomType.type,
+              slug: roomSlug, // REQUIRED: Add the slug field
               capacity: roomType.capacity,
               amenities: roomType.amenities || [],
               rate: roomType.rate,
+              pricePerNight: roomType.rate,
+              bedCount: Math.ceil(roomType.capacity / 2),
+              floorNumber: 1,
+              availabilityStatus: "available",
               availableFrom: new Date(),
               availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
             }
-          )) as Room;
+          );
         }
 
         syncedRooms.push(parseStringify(room));
+        console.log(`Synced room: ${roomType.name} (${roomSlug})`);
       } catch (error) {
         console.error(`Error syncing room ${roomType.name}:`, error);
       }
@@ -110,6 +132,7 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
       success: true,
       rooms: syncedRooms,
       hotelId: defaultHotelId,
+      message: `Successfully synced ${syncedRooms.length} rooms`,
     };
   } catch (error) {
     console.error("Error syncing rooms to Appwrite:", error);
@@ -170,4 +193,3 @@ export const getRoomByName = async (roomName: string) => {
     return null;
   }
 };
-

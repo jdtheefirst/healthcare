@@ -136,6 +136,7 @@ export const GuestInquirySchema = z.object({
 
 export const HotelBookingSchema = z
   .object({
+    hotelId: z.string().min(1, "Please select a hotel"),
     roomType: z.string().min(2, "Pick a room type"),
     checkIn: z.coerce.date(),
     checkOut: z.coerce.date(),

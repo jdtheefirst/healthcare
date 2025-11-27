@@ -40,6 +40,7 @@ interface CustomProps {
   showTimeSelect?: boolean;
   children?: React.ReactNode;
   renderSkeleton?: (field: any) => React.ReactNode;
+  onValueChange?: (value: string) => void;
   fieldType: FormFieldType;
 }
 
@@ -132,7 +133,13 @@ const RenderInput = ({ field, props }: { field: any; props: CustomProps }) => {
     case FormFieldType.SELECT:
       return (
         <FormControl>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select
+            onValueChange={(value) => {
+              field.onChange(value); // Update form state
+              props.onValueChange?.(value); // Call custom callback
+            }}
+            defaultValue={field.value}
+          >
             <FormControl>
               <SelectTrigger className="shad-select-trigger">
                 <SelectValue placeholder={props.placeholder} />

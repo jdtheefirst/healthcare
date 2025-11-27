@@ -3,12 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { ID, Query } from "node-appwrite";
 
-import { Booking, Guest } from "@/types/appwrite.types";
+import {
+  Booking,
+  CreateBookingParams,
+  Guest,
+  Hotel,
+  Room,
+  UpdateBookingParams,
+} from "@/types/appwrite.types";
 
 import {
   BOOKING_COLLECTION_ID,
   DATABASE_ID,
   GUEST_COLLECTION_ID,
+  HOTEL_COLLECTION_ID,
   ROOM_COLLECTION_ID,
   databases,
   messaging,
@@ -72,25 +80,27 @@ export const getGuestByEmail = async (email: string) => {
   }
 };
 
-// CREATE BOOKING
+// CREATE BOOKING - CORRECTED VERSION
 export const createBooking = async (booking: CreateBookingParams) => {
   try {
     // First, get or create guest if guestId not provided
     let guestId = booking.guestId;
 
     if (!guestId && booking.guestEmail) {
-      const existingGuest = await getGuestByEmail(booking.guestEmail);
+      const existingGuest = (await getGuestByEmail(
+        booking.guestEmail
+      )) as Guest | null;
       if (existingGuest) {
         guestId = existingGuest.$id;
       } else {
-        // Create guest on the fly
-        const newGuest = await createGuest({
+        // Create guest on the fly with required fields
+        const newGuest = (await createGuest({
           name: booking.guestName || "Guest",
           email: booking.guestEmail!,
-          phone: booking.guestPhone || "",
-          purpose: booking.purpose || "Business",
+          phone: booking.guestPhone || "+0000000000",
+          purpose: (booking.purpose || "Business") as BookingPurpose,
           guestsCount: booking.guestsCount || 1,
-        });
+        })) as Guest;
         guestId = newGuest.$id;
       }
     }
@@ -99,54 +109,117 @@ export const createBooking = async (booking: CreateBookingParams) => {
       throw new Error("Guest ID or email is required");
     }
 
-    // Get room to extract hotelId (if roomId is a document ID)
-    let hotelId = booking.hotelId || "";
-    let roomId = booking.roomId || "";
-    
-    // If roomId looks like a document ID (not a room type string), try to fetch it
-    if (ROOM_COLLECTION_ID && booking.roomId && booking.roomId.length > 10) {
+    // Resolve hotelId and roomId properly
+    let finalHotelId = booking.hotelId || "";
+    let finalRoomId = booking.roomId || "";
+
+    // Check if roomId is a valid Appwrite document ID
+    const isValidDocumentId = booking.roomId && booking.roomId.length === 13;
+
+    if (isValidDocumentId && ROOM_COLLECTION_ID) {
       try {
-        const room = await databases.getDocument(
+        const room = (await databases.getDocument(
           DATABASE_ID!,
           ROOM_COLLECTION_ID!,
           booking.roomId
+        )) as unknown as Room;
+
+        // Use the room document's hotelId
+        finalHotelId = room.hotelId || finalHotelId;
+        finalRoomId = booking.roomId;
+
+        console.log(
+          `✅ Using room document: ${room.label} from hotel: ${finalHotelId}`
         );
-        hotelId = (room as any).hotelId || hotelId;
-        roomId = booking.roomId;
       } catch (error) {
-        // Room document doesn't exist, store roomType as string
-        console.warn("Room document not found, storing roomType:", error);
-        roomId = booking.roomType || booking.roomId;
+        console.warn(
+          "❌ Room document not found, falling back to roomType:",
+          error
+        );
+        finalRoomId = booking.roomType || booking.roomId;
       }
     } else {
-      // Store roomType directly (from constants)
-      roomId = booking.roomType || booking.roomId || "";
+      // Not a document ID, store as roomType string
+      finalRoomId = booking.roomType || booking.roomId || "";
+
+      // Try to find a hotel that has this room type
+      if (!finalHotelId && HOTEL_COLLECTION_ID && ROOM_COLLECTION_ID) {
+        try {
+          const rooms = await databases.listDocuments(
+            DATABASE_ID!,
+            ROOM_COLLECTION_ID!,
+            [
+              Query.equal("label", booking.roomType || booking.roomId),
+              Query.limit(1),
+            ]
+          );
+
+          if (rooms.documents.length > 0) {
+            const room = rooms.documents[0] as unknown as Room;
+            finalHotelId = room.hotelId;
+            finalRoomId = room.$id;
+            console.log(`✅ Found room document for type: ${booking.roomType}`);
+          }
+        } catch (error) {
+          console.warn(
+            "Could not find room document for type:",
+            booking.roomType
+          );
+        }
+      }
     }
 
+    // If we still don't have a hotelId, use the default hotel
+    if (!finalHotelId && HOTEL_COLLECTION_ID) {
+      try {
+        const hotels = await databases.listDocuments(
+          DATABASE_ID!,
+          HOTEL_COLLECTION_ID!,
+          [Query.limit(1)]
+        );
+        if (hotels.documents.length > 0) {
+          const hotel = hotels.documents[0] as unknown as Hotel;
+          finalHotelId = hotel.$id;
+          console.log(`✅ Using default hotel: ${finalHotelId}`);
+        }
+      } catch (error) {
+        console.warn(
+          "No hotels found, booking will be created without hotelId"
+        );
+      }
+    }
+
+    // Prepare booking data
+    const bookingData = {
+      guestId: guestId,
+      roomId: finalRoomId,
+      roomType: booking.roomType || finalRoomId,
+      status: booking.status || "pending",
+      checkIn: new Date(booking.checkIn),
+      checkOut: new Date(booking.checkOut),
+      specialRequests: booking.specialRequests || "",
+      channel: booking.channel || "web",
+      purpose: booking.purpose || "Business",
+      ...(finalHotelId && { hotelId: finalHotelId }),
+    };
+
+    console.log("📝 Creating booking with data:", bookingData);
+
     // Create booking document
-    const newBooking = await databases.createDocument(
+    const newBooking = (await databases.createDocument(
       DATABASE_ID!,
       BOOKING_COLLECTION_ID!,
       ID.unique(),
-      {
-        guestId: guestId,
-        roomId: roomId, // Can be document ID or room type string
-        roomType: booking.roomType || roomId, // Store for display
-        hotelId: hotelId,
-        status: booking.status || "pending",
-        checkIn: new Date(booking.checkIn),
-        checkOut: new Date(booking.checkOut),
-        specialRequests: booking.specialRequests || "",
-        channel: booking.channel || "web",
-        purpose: booking.purpose || "Business",
-      }
-    );
+      bookingData
+    )) as unknown as Booking;
+
+    console.log("✅ Booking created successfully:", newBooking.$id);
 
     revalidatePath("/admin/dashboard");
     revalidatePath("/hotel-demo");
     return parseStringify(newBooking);
   } catch (error) {
-    console.error("An error occurred while creating a new booking:", error);
+    console.error("❌ An error occurred while creating a new booking:", error);
     throw error;
   }
 };
@@ -160,20 +233,25 @@ export const getRecentBookingList = async () => {
       [Query.orderDesc("$createdAt")]
     );
 
+    // Type the bookings as Booking[]
+    const bookingDocuments = bookings.documents as unknown as Booking[];
+
     // Fetch related guest and room data
     const enrichedBookings = await Promise.all(
-      bookings.documents.map(async (booking) => {
+      bookingDocuments.map(async (booking) => {
         try {
-          const guest = await databases.getDocument(
+          const guest = (await databases.getDocument(
             DATABASE_ID!,
             GUEST_COLLECTION_ID!,
             booking.guestId
-          );
+          )) as unknown as Guest;
 
           // Try to get room, but handle if it doesn't exist
-          let room: any = null;
-          const bookingData = booking as any;
-          
+          let room: Room | { name: string; label: string } = {
+            name: booking.roomType || "Unknown Room",
+            label: booking.roomType || "Unknown Room",
+          };
+
           // If roomId looks like a document ID, try to fetch it
           if (
             ROOM_COLLECTION_ID &&
@@ -182,24 +260,15 @@ export const getRecentBookingList = async () => {
             !booking.roomId.includes(" ")
           ) {
             try {
-              room = await databases.getDocument(
+              room = (await databases.getDocument(
                 DATABASE_ID!,
                 ROOM_COLLECTION_ID!,
                 booking.roomId
-              );
+              )) as unknown as Room;
             } catch {
               // Room document doesn't exist, use roomType
-              room = {
-                name: bookingData.roomType || booking.roomId || "Unknown Room",
-                label: bookingData.roomType || booking.roomId || "Unknown Room",
-              };
+              console.warn(`Room document ${booking.roomId} not found`);
             }
-          } else {
-            // roomId is actually a roomType string
-            room = {
-              name: bookingData.roomType || booking.roomId || "Unknown Room",
-              label: bookingData.roomType || booking.roomId || "Unknown Room",
-            };
           }
 
           return {
@@ -220,23 +289,20 @@ export const getRecentBookingList = async () => {
       cancelledCount: 0,
     };
 
-    const counts = (enrichedBookings as Booking[]).reduce(
-      (acc, booking) => {
-        switch (booking.status) {
-          case "scheduled":
-            acc.scheduledCount++;
-            break;
-          case "pending":
-            acc.pendingCount++;
-            break;
-          case "cancelled":
-            acc.cancelledCount++;
-            break;
-        }
-        return acc;
-      },
-      initialCounts
-    );
+    const counts = enrichedBookings.reduce((acc, booking) => {
+      switch (booking.status) {
+        case "scheduled":
+          acc.scheduledCount++;
+          break;
+        case "pending":
+          acc.pendingCount++;
+          break;
+        case "cancelled":
+          acc.cancelledCount++;
+          break;
+      }
+      return acc;
+    }, initialCounts);
 
     const data = {
       totalCount: bookings.total,
@@ -327,37 +393,32 @@ export const updateBooking = async ({
   booking,
   type,
   timeZone,
-}: {
-  bookingId: string;
-  booking: Partial<Booking>;
-  type: "schedule" | "cancel";
-  timeZone?: string;
-}) => {
+}: UpdateBookingParams) => {
   try {
-    const updateData: any = {
-      status: type === "schedule" ? "scheduled" : "cancelled",
-      ...booking,
-    };
+    const updateData: any = {};
 
-    if (type === "cancel" && booking.cancellationReason) {
+    if (type === "cancel") {
+      updateData.status = "cancelled";
       updateData.cancellationReason = booking.cancellationReason;
+    } else if (type === "schedule") {
+      updateData.status = "scheduled";
     }
 
-    const updatedBooking = await databases.updateDocument(
+    const updatedBooking = (await databases.updateDocument(
       DATABASE_ID!,
       BOOKING_COLLECTION_ID!,
       bookingId,
       updateData
-    );
+    )) as unknown as Booking;
 
-    if (!updatedBooking) throw Error;
+    if (!updatedBooking) throw new Error("Failed to update booking");
 
     // Get guest for SMS
-    const guest = await databases.getDocument(
+    const guest = (await databases.getDocument(
       DATABASE_ID!,
       GUEST_COLLECTION_ID!,
       updatedBooking.guestId
-    );
+    )) as unknown as Guest;
 
     // Send SMS notification
     const checkInDate = formatDateTime(
@@ -387,20 +448,21 @@ export const updateBooking = async ({
 // GET BOOKING
 export const getBooking = async (bookingId: string) => {
   try {
-    const booking = await databases.getDocument(
+    const booking = (await databases.getDocument(
       DATABASE_ID!,
       BOOKING_COLLECTION_ID!,
       bookingId
-    );
+    )) as unknown as Booking;
 
     // Enrich with guest data
     try {
-      const guest = await databases.getDocument(
+      const guest = (await databases.getDocument(
         DATABASE_ID!,
         GUEST_COLLECTION_ID!,
         booking.guestId
-      );
-      booking.guest = guest;
+      )) as unknown as Guest;
+      // Add guest to booking object
+      (booking as any).guest = guest;
     } catch {
       // Guest might not exist
     }
@@ -412,3 +474,106 @@ export const getBooking = async (bookingId: string) => {
   }
 };
 
+export const getBookingWithDetails = async (bookingId: string) => {
+  try {
+    const booking = (await databases.getDocument(
+      DATABASE_ID!,
+      BOOKING_COLLECTION_ID!,
+      bookingId
+    )) as unknown as Booking;
+
+    // Fetch guest details
+    let guest: Guest | null = null;
+    if (booking.guestId) {
+      try {
+        guest = (await databases.getDocument(
+          DATABASE_ID!,
+          GUEST_COLLECTION_ID!,
+          booking.guestId
+        )) as unknown as Guest;
+      } catch (error) {
+        console.warn("Guest not found for booking:", booking.guestId);
+      }
+    }
+
+    // Fetch room details if roomId is a document ID
+    let room: Room | null = null;
+    if (booking.roomId && booking.roomId.length === 13) {
+      try {
+        room = (await databases.getDocument(
+          DATABASE_ID!,
+          ROOM_COLLECTION_ID!,
+          booking.roomId
+        )) as unknown as Room;
+      } catch (error) {
+        console.warn("Room document not found:", booking.roomId);
+      }
+    }
+
+    return {
+      ...booking,
+      guest,
+      room,
+    };
+  } catch (error) {
+    console.error("Error fetching booking with details:", error);
+    throw error;
+  }
+};
+
+export const getAllHotels = async () => {
+  try {
+    const hotels = await databases.listDocuments(
+      DATABASE_ID!,
+      HOTEL_COLLECTION_ID!
+    );
+    return hotels.documents;
+  } catch (error) {
+    console.error("Error fetching hotels:", error);
+    return [];
+  }
+};
+
+export const getHotelById = async (hotelId: string) => {
+  try {
+    const hotel = await databases.getDocument(
+      DATABASE_ID!,
+      HOTEL_COLLECTION_ID!,
+      hotelId
+    );
+    return hotel;
+  } catch (error) {
+    console.error("Error fetching hotel:", error);
+    return null;
+  }
+};
+
+export const getRoomsByHotel = async (hotelId: string) => {
+  try {
+    const rooms = await databases.listDocuments(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      [Query.equal("hotelId", hotelId)]
+    );
+    return rooms.documents;
+  } catch (error) {
+    console.error("Error fetching rooms by hotel:", error);
+    return [];
+  }
+};
+
+export const getRoomById = async (roomId: string) => {
+  try {
+    if (!ROOM_COLLECTION_ID) return null;
+
+    const room = await databases.getDocument(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      roomId
+    );
+    return room;
+  } catch (error) {
+    console.error("Error fetching room by ID:", error);
+    return null;
+  }
+};

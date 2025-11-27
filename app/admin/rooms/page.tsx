@@ -1,28 +1,19 @@
-import Image from "next/image";
 import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
-import { syncRoomsToAppwrite } from "@/lib/actions/room.actions";
+import { SyncRoomsForm } from "@/components/hotel/SyncRoomsForm";
 
 const RoomsManagementPage = async () => {
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8 px-[5%] py-10">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/admin/dashboard" className="cursor-pointer">
-            <Image
-              src="/assets/icons/logo-full.svg"
-              height={32}
-              width={162}
-              alt="logo"
-              className="h-8 w-fit"
-            />
-          </Link>
-          <span className="rounded-full border border-dark-400 px-3 py-1 text-12-semibold text-dark-600">
+          <h1 className="rounded-full border border-dark-400 px-3 py-1 text-14-semibold">
             Room Management
-          </span>
+          </h1>
         </div>
-        <Link href="/admin/dashboard" className="shad-gray-btn rounded-full px-5 py-2">
+        <Link
+          href="/admin/dashboard"
+          className="shad-gray-btn rounded-full px-5 py-2"
+        >
           Back to Dashboard
         </Link>
       </header>
@@ -35,11 +26,7 @@ const RoomsManagementPage = async () => {
           actual room documents.
         </p>
 
-        <form action={syncRoomsToAppwrite}>
-          <Button type="submit" className="shad-primary-btn">
-            Sync Rooms to Appwrite
-          </Button>
-        </form>
+        <SyncRoomsForm />
 
         <div className="mt-6 rounded-2xl border border-dark-500 bg-dark-300 p-4">
           <p className="text-14-medium mb-2">What this does:</p>
@@ -56,4 +43,3 @@ const RoomsManagementPage = async () => {
 };
 
 export default RoomsManagementPage;
-

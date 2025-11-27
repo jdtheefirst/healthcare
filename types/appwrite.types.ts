@@ -1,6 +1,63 @@
+// types/appwrite.types.ts
 import { Models } from "node-appwrite";
 
-export interface Patient extends Models.Document {
+// Base document with Appwrite's default fields + your custom fields
+export interface BaseDocument extends Models.Document {
+  // Add your custom fields here that exist in ALL your collections
+  [key: string]: any; // This allows any additional properties
+}
+
+// Specific collection types
+export interface Booking extends BaseDocument {
+  guestId: string;
+  roomId: string;
+  hotelId?: string;
+  roomType: string;
+  status: Status;
+  checkIn: Date;
+  checkOut: Date;
+  specialRequests?: string;
+  channel: "web" | "sms" | "admin";
+  purpose?: string;
+  cancellationReason?: string | null;
+}
+
+export interface Room extends BaseDocument {
+  hotelId: string;
+  label: string;
+  type: string;
+  capacity: number;
+  amenities: string[];
+  rate: number;
+  pricePerNight?: number;
+  bedCount?: number;
+  floorNumber?: number;
+  availabilityStatus?: string;
+  availableFrom: Date;
+  availableTo: Date;
+  description?: string;
+  slug: string;
+}
+
+export interface Hotel extends BaseDocument {
+  name: string;
+  location: string;
+  description?: string;
+  amenities?: string[];
+  logo?: string;
+  slug: string;
+}
+
+export interface Guest extends BaseDocument {
+  name: string;
+  email: string;
+  phone: string;
+  purpose: string;
+  guestsCount?: number;
+}
+
+// Keep your existing Patient and Appointment interfaces but extend BaseDocument
+export interface Patient extends BaseDocument {
   userId: string;
   name: string;
   email: string;
@@ -24,7 +81,7 @@ export interface Patient extends Models.Document {
   privacyConsent: boolean;
 }
 
-export interface Appointment extends Models.Document {
+export interface Appointment extends BaseDocument {
   patient: Patient;
   schedule: Date;
   status: Status;
@@ -35,36 +92,38 @@ export interface Appointment extends Models.Document {
   cancellationReason: string | null;
 }
 
-export interface Hotel extends Models.Document {
-  name: string;
-  location: string;
-  description?: string;
-}
+// types/appwrite.types.ts
+export type UpdateBookingParams = {
+  bookingId: string;
+  booking: {
+    cancellationReason?: string;
+    status?: Status;
+    checkIn?: Date;
+    checkOut?: Date;
+    specialRequests?: string;
+    roomId?: string;
+    roomType?: string;
+    hotelId?: string;
+  };
+  type: "cancel" | "schedule" | "update";
+  timeZone: string;
+};
 
-export interface Room extends Models.Document {
-  hotelId: string;
-  label: string;
-  type: string;
-  capacity: number;
-  amenities: string[];
-  rate: number;
-  availableFrom: Date;
-  availableTo: Date;
-}
-
-export interface Guest extends Models.Document {
-  name: string;
-  email: string;
-  phone: string;
-  purpose: string;
-}
-
-export interface Booking extends Models.Document {
-  guest: Guest;
-  room: Room;
+export type CreateBookingParams = {
+  guestId?: string;
+  guestEmail?: string;
+  guestName?: string;
+  guestPhone?: string;
+  roomId: string;
+  roomType: string;
+  hotelId?: string;
   status: Status;
   checkIn: Date;
   checkOut: Date;
   specialRequests?: string;
-  channel: "web" | "sms" | "admin";
-}
+  channel?: "web" | "sms" | "admin";
+  purpose?: string;
+  guestsCount?: number;
+};
+
+export type Status = "pending" | "scheduled" | "cancelled";

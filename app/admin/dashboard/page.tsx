@@ -24,30 +24,35 @@ const AdminDashboardPage = async () => {
   };
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-12 px-[5%] py-10">
+    <div className="mx-auto flex max-w-7xl flex-col gap-12 px-2 sm:px-[5%] py-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link href="/" className="cursor-pointer">
-            <Image
-              src="/assets/icons/logo-full.svg"
-              height={32}
-              width={162}
-              alt="logo"
-              className="h-8 w-fit"
-            />
+            <h1 className="flex items-center gap-2 text-2xl font-semibold">
+              CarePulse & CareStay
+            </h1>
           </Link>
-          <span className="rounded-full border border-dark-400 px-3 py-1 text-12-semibold text-dark-600">
+          <span className="flex-1 rounded-full border border-dark-400 px-3 py-1 text-12-semibold text-dark-600">
             Dual admin dashboard
           </span>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link href="/hotel-demo" className="shad-gray-btn rounded-full px-5 py-2">
+          <Link
+            href="/hotel-demo"
+            className="shad-gray-btn rounded-full px-5 py-2"
+          >
             View hotel flow
           </Link>
-          <Link href="/admin/rooms" className="shad-gray-btn rounded-full px-5 py-2">
+          <Link
+            href="/admin/rooms"
+            className="shad-gray-btn rounded-full px-5 py-2"
+          >
             Manage Rooms
           </Link>
-          <Link href="/features" className="shad-primary-btn rounded-full px-5 py-2">
+          <Link
+            href="/features"
+            className="shad-primary-btn rounded-full px-5 py-2"
+          >
             Feature matrix
           </Link>
         </div>
@@ -64,4 +69,3 @@ const AdminDashboardPage = async () => {
 };
 
 export default AdminDashboardPage;
-
