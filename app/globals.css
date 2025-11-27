@@ -348,3 +348,119 @@
 .PhoneInputInput::placeholder {
   color: #1a1d21;
 }
+
+/* React Phone Input 2 Dark Theme Styling */
+.phone-input-container {
+  width: 100%;
+  font-family: inherit;
+}
+
+.phone-input-container .input-phone {
+  width: 100% !important;
+  height: 44px !important;
+  background: #1a1d21 !important;
+  border: 1px solid #363a3d !important;
+  border-radius: 6px !important;
+  color: #abb8c4 !important;
+  font-size: 14px !important;
+  padding-left: 60px !important;
+}
+
+.phone-input-container .input-phone:focus {
+  outline: none !important;
+  border-color: #24ae7c !important;
+  box-shadow: 0 0 0 2px rgba(36, 174, 124, 0.1) !important;
+}
+
+.phone-input-container .input-phone::placeholder {
+  color: #76828d !important;
+}
+
+/* Country button styling */
+.phone-input-container .flag-dropdown {
+  background: #1a1d21 !important;
+  border: 1px solid #363a3d !important;
+  border-right: none !important;
+  border-radius: 6px 0 0 6px !important;
+}
+
+.phone-input-container .selected-flag {
+  background: transparent !important;
+  border-radius: 6px 0 0 6px !important;
+}
+
+.phone-input-container .selected-flag:hover,
+.phone-input-container .selected-flag:focus {
+  background: #131619 !important;
+}
+
+/* Dropdown styling */
+.phone-input-container .country-list {
+  background: #1a1d21 !important;
+  border: 1px solid #363a3d !important;
+  border-radius: 6px !important;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.phone-input-container .country-list .country {
+  color: #abb8c4 !important;
+  background: transparent !important;
+}
+
+.phone-input-container .country-list .country:hover {
+  background: #131619 !important;
+}
+
+.phone-input-container .country-list .country.highlight {
+  background: #24ae7c !important;
+  color: white !important;
+}
+
+.phone-input-container .country-list .country .dial-code {
+  color: #76828d !important;
+}
+
+.phone-input-container .country-list .country:hover .dial-code {
+  color: #abb8c4 !important;
+}
+
+.phone-input-container .country-list .country.highlight .dial-code {
+  color: white !important;
+}
+
+/* Search box styling */
+.phone-input-container .search-box {
+  background: #131619 !important;
+  border-bottom: 1px solid #363a3d !important;
+  color: #abb8c4 !important;
+  padding: 10px !important;
+}
+
+.phone-input-container .search-box input {
+  background: #1a1d21 !important;
+  border: 1px solid #363a3d !important;
+  color: #abb8c4 !important;
+  border-radius: 4px !important;
+}
+
+.phone-input-container .search-box input:focus {
+  outline: none !important;
+  border-color: #24ae7c !important;
+}
+
+/* Divider in dropdown */
+.phone-input-container .country-list .divider {
+  border-bottom: 1px solid #363a3d !important;
+}
+
+/* Arrow icon */
+.phone-input-container .selected-flag .arrow {
+  border-top: 4px solid #76828d !important;
+}
+
+.phone-input-container .selected-flag.open .arrow {
+  border-bottom: 4px solid #76828d !important;
+  border-top: none !important;
+}

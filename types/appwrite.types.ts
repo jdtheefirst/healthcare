@@ -37,6 +37,7 @@ export interface Room extends BaseDocument {
   availableTo: Date;
   description?: string;
   slug: string;
+  image?: string;
 }
 
 export interface Hotel extends BaseDocument {

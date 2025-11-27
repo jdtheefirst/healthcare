@@ -14,7 +14,8 @@ export default async function RoomsPage() {
   // If no rooms in Appwrite, use constants with proper hotel assignment
   if (!rooms || rooms.length === 0) {
     // Assign rooms to the first hotel if available, otherwise use "default"
-    const defaultHotelId = hotels.length > 0 ? hotels[0].$id : "default";
+    const defaultHotelId =
+      hotels.length > 0 ? hotels[0].$id : HotelRoomTypes[0].hotelId;
 
     rooms = HotelRoomTypes.map((room) => ({
       ...room,
@@ -177,7 +178,7 @@ function RoomCard({
 
         {/* Book Button - Now includes hotelId in URL */}
         <Link
-          href={`/hotel-demo?roomId=${roomData.id}&roomName=${encodeURIComponent(roomData.name)}&hotelId=${roomData.hotelId}`}
+          href={`/hotel-demo?roomId=${roomData.id}&roomName=${encodeURIComponent(roomData.name)}&hotelId=${roomData.hotelId}&scrollTo=booking-form`}
           className="shad-primary-btn w-full rounded-full py-3 text-center block"
         >
           Select Room

@@ -3,7 +3,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import Link from "next/link";
@@ -30,6 +30,7 @@ type HotelBookingFormProps = {
   booking?: Booking;
   type?: "create" | "schedule" | "cancel";
   setOpen?: (open: boolean) => void;
+  scrollTo?: string;
 };
 
 export const HotelBookingForm = ({
@@ -38,6 +39,7 @@ export const HotelBookingForm = ({
   booking,
   type = "create",
   setOpen,
+  scrollTo,
 }: HotelBookingFormProps = {}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,6 +58,23 @@ export const HotelBookingForm = ({
   const preselectedRoomId = searchParams?.get("roomId");
   const preselectedRoomName = searchParams?.get("roomName");
   const preselectedHotelId = searchParams?.get("hotelId");
+  const bookingFormRef = useRef<HTMLFormElement>(null);
+
+  // Scroll to booking form when scrollTo param is present
+  useEffect(() => {
+    if (scrollTo === "booking-form" && bookingFormRef.current) {
+      bookingFormRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      // Optional: Clean up the URL after scrolling
+      const cleanUrl =
+        window.location.pathname +
+        window.location.search.replace(/&?scrollTo=booking-form/, "");
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, [scrollTo]);
 
   // Get guest info from sessionStorage if available
   useEffect(() => {
@@ -90,6 +109,11 @@ export const HotelBookingForm = ({
             defaultHotelId = appwriteHotels[0].$id;
           }
           setSelectedHotelId(defaultHotelId);
+
+          // Set form value AFTER state is updated
+          setTimeout(() => {
+            form.setValue("hotelId", defaultHotelId);
+          }, 0);
 
           // Fetch rooms for the first hotel
           const hotelRooms = await getRoomsByHotel(defaultHotelId);
@@ -169,13 +193,6 @@ export const HotelBookingForm = ({
             specialRequests: booking?.specialRequests || "",
           },
   });
-
-  // Use selectedRoomState instead of recalculating selectedRoom
-  const displayRoom =
-    selectedRoomState ||
-    availableRooms.find(
-      (room) => getRoomLabel(room) === form.watch("roomType")
-    );
 
   // Separate handlers for each form type
   const handleCancelBooking = async (values: {
@@ -322,8 +339,9 @@ export const HotelBookingForm = ({
   return (
     <Form {...form}>
       <form
+        ref={bookingFormRef}
         onSubmit={form.handleSubmit(onSubmit)}
-        className="space-y-6 rounded-3xl border border-dark-400 bg-dark-200/80 p-2 sm:p-6 shadow-lg backdrop-blur"
+        className="space-y-6 rounded-3xl border border-dark-400 bg-dark-200/80 p-2 sm:p-6 shadow-lg backdrop-blur scroll-mt-24"
       >
         <section className="space-y-1">
           <p className="text-12-semibold uppercase text-blue-500 p-2 sm:p-0">
@@ -382,7 +400,10 @@ export const HotelBookingForm = ({
             name="hotelId"
             label="Select Hotel"
             placeholder="Choose a hotel"
-            disabled={type === "schedule"}
+            disabled={
+              type === "schedule" ||
+              selectedRoomState?.hotelId === selectedHotelId
+            }
             onValueChange={(value) => setSelectedHotelId(value)}
           >
             {hotels.map((hotel) => (

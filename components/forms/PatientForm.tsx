@@ -9,8 +9,7 @@ import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { createUser } from "@/lib/actions/patient.actions";
 import { UserFormValidation } from "@/lib/validation";
-
-import "react-phone-number-input/style.css";
+import "react-phone-input-2/lib/style.css";
 import CustomFormField, { FormFieldType } from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 

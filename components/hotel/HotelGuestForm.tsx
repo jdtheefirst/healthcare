@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -15,10 +15,26 @@ import SubmitButton from "../SubmitButton";
 import { Form } from "../ui/form";
 import { SelectItem } from "../ui/select";
 
-export const HotelGuestForm = () => {
-  const router = useRouter();
+export const HotelGuestForm = ({ scrollTo }: { scrollTo: string }) => {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const bookingFormRef = useRef<HTMLFormElement>(null);
+
+  // Scroll to booking form when scrollTo param is present
+  useEffect(() => {
+    if (scrollTo === "guest-form" && bookingFormRef.current) {
+      bookingFormRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      // Optional: Clean up the URL after scrolling
+      const cleanUrl =
+        window.location.pathname +
+        window.location.search.replace(/&?scrollTo=guest-form/, "");
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, [scrollTo]);
 
   const form = useForm<z.infer<typeof GuestInquirySchema>>({
     resolver: zodResolver(GuestInquirySchema),
@@ -48,7 +64,9 @@ export const HotelGuestForm = () => {
       });
 
       if (guest) {
-        setStatusMessage("✓ Guest profile created! You can now proceed to booking.");
+        setStatusMessage(
+          "✓ Guest profile created! You can now proceed to booking."
+        );
         // Store guest ID in sessionStorage for booking form
         if (typeof window !== "undefined") {
           sessionStorage.setItem("hotelGuestId", guest.$id);

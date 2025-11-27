@@ -117,6 +117,7 @@ export const HotelRoomTypes = [
   {
     id: "skyline-suite",
     name: "Skyline Suite",
+    hotelId: "6927fc43002c1ffc7475",
     type: "Suite",
     capacity: 3,
     rate: 420,
@@ -135,6 +136,7 @@ export const HotelRoomTypes = [
   {
     id: "wellness-floor-deluxe",
     name: "Wellness Floor Deluxe",
+    hotelId: "6927fc43002c1ffc7475",
     type: "King",
     capacity: 2,
     rate: 260,
@@ -153,6 +155,7 @@ export const HotelRoomTypes = [
   {
     id: "team-residence",
     name: "Team Residence",
+    hotelId: "6927fc43002c1ffc7475",
     type: "Apartment",
     capacity: 6,
     rate: 680,
@@ -171,6 +174,7 @@ export const HotelRoomTypes = [
   {
     id: "executive-king",
     name: "Executive King",
+    hotelId: "6927fc43002c1ffc7475",
     type: "King",
     capacity: 2,
     rate: 320,
@@ -189,6 +193,7 @@ export const HotelRoomTypes = [
   {
     id: "family-connector",
     name: "Family Connector Suite",
+    hotelId: "6927fc43002c1ffc7475",
     type: "Suite",
     capacity: 5,
     rate: 550,
@@ -207,6 +212,7 @@ export const HotelRoomTypes = [
   {
     id: "accessible-deluxe",
     name: "Accessible Deluxe",
+    hotelId: "6927fc43002c1ffc7475",
     type: "Queen",
     capacity: 2,
     rate: 280,
@@ -225,6 +231,7 @@ export const HotelRoomTypes = [
   {
     id: "pet-friendly-queen",
     name: "Pet-Friendly Queen",
+    hotelId: "6927fc43002c1ffc7475",
     type: "Queen",
     capacity: 2,
     rate: 240,
@@ -243,6 +250,7 @@ export const HotelRoomTypes = [
   {
     id: "honeymoon-suite",
     name: "Honeymoon Suite",
+    hotelId: "6927fc43002c1ffc7475",
     type: "Suite",
     capacity: 2,
     rate: 490,
@@ -261,6 +269,7 @@ export const HotelRoomTypes = [
   {
     id: "standard-queen",
     name: "Standard Queen",
+    hotelId: "6927fc43002c1ffc7475",
     type: "Queen",
     capacity: 2,
     rate: 180,
@@ -279,6 +288,7 @@ export const HotelRoomTypes = [
   {
     id: "premium-twin",
     name: "Premium Twin",
+    hotelId: "6927fc43002c1ffc7475",
     type: "Twin",
     capacity: 2,
     rate: 200,

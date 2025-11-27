@@ -7,7 +7,13 @@ import { HotelGuestForm } from "@/components/hotel/HotelGuestForm";
 import { HotelSellingPoints } from "@/components/hotel/HotelSellingPoints";
 import { Button } from "@/components/ui/button";
 
-const HotelDemoPage = () => {
+const HotelDemoPage = async ({
+  searchParams,
+}: {
+  searchParams: Promise<{ scrollTo: string }>;
+}) => {
+  const { scrollTo } = await searchParams;
+
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-10 px-2 sm:px-[5%] py-12">
       <section className="grid gap-8 rounded-3xl border border-dark-400 bg-gradient-to-br from-green-600/30 to-blue-600/10 p-2 sm:p-8 md:grid-cols-[2fr,1fr]">
@@ -55,9 +61,12 @@ const HotelDemoPage = () => {
         </div>
       </section>
 
-      <section className="grid gap-8 lg:grid-cols-2">
-        <HotelGuestForm />
-        <HotelBookingForm />
+      <section
+        className="grid gap-8 lg:grid-cols-2 scroll-mt-20"
+        id="booking-form"
+      >
+        <HotelGuestForm scrollTo={scrollTo} />
+        <HotelBookingForm scrollTo={scrollTo} />
       </section>
 
       <HotelFlowComparison />
