@@ -1,11 +1,13 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { BookingPurposes } from "@/constants";
+import { createGuest } from "@/lib/actions/hotel.actions";
 import { GuestInquirySchema } from "@/lib/validation";
 
 import CustomFormField, { FormFieldType } from "../CustomFormField";
@@ -14,7 +16,9 @@ import { Form } from "../ui/form";
 import { SelectItem } from "../ui/select";
 
 export const HotelGuestForm = () => {
+  const router = useRouter();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof GuestInquirySchema>>({
     resolver: zodResolver(GuestInquirySchema),
@@ -29,10 +33,38 @@ export const HotelGuestForm = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof GuestInquirySchema>) => {
-    setStatusMessage("Syncing guest with Appwrite `guests` collection...");
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    console.log("Hotel guest preview payload", values);
-    setStatusMessage("Guest linked. SMS confirmation template ready.");
+    setIsLoading(true);
+    setStatusMessage("Creating guest profile...");
+
+    try {
+      const guest = await createGuest({
+        name: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        purpose: values.bookingPurpose,
+        guestsCount: values.guests,
+        vipNotes: values.vipNotes || "",
+        consent: true, // Implicit consent for hotel bookings
+      });
+
+      if (guest) {
+        setStatusMessage("✓ Guest profile created! You can now proceed to booking.");
+        // Store guest ID in sessionStorage for booking form
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("hotelGuestId", guest.$id);
+          sessionStorage.setItem("hotelGuestEmail", guest.email);
+        }
+        // Optionally redirect or show success
+        setTimeout(() => {
+          setStatusMessage(null);
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Error creating guest:", error);
+      setStatusMessage("Error creating guest. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -118,10 +150,7 @@ export const HotelGuestForm = () => {
           {statusMessage && <p className="text-green-500">{statusMessage}</p>}
         </div>
 
-        <SubmitButton
-          className="w-full"
-          isLoading={form.formState.isSubmitting}
-        >
+        <SubmitButton className="w-full" isLoading={isLoading}>
           Save guest profile
         </SubmitButton>
       </form>

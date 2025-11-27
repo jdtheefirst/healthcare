@@ -146,3 +146,10 @@ export const HotelBookingSchema = z
     message: "Check-out must be after check-in",
     path: ["checkOut"],
   });
+
+export const CancelBookingSchema = z.object({
+  cancellationReason: z
+    .string()
+    .min(2, "Reason must be at least 2 characters")
+    .max(500, "Reason must be at most 500 characters"),
+});

@@ -2,20 +2,18 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 
+import { Booking } from "@/types/appwrite.types";
 import { formatDateTime } from "@/lib/utils";
 
 import { StatusBadge } from "../StatusBadge";
+import { HotelBookingModal } from "./HotelBookingModal";
 
-export type HotelBookingRow = {
-  id: string;
-  guestName: string;
-  phone: string;
-  roomType: string;
-  status: Status;
-  purpose: BookingPurpose;
-  checkIn: string;
-  checkOut: string;
-  specialRequests: string;
+// Transform Appwrite Booking to display format
+export type HotelBookingRow = Booking & {
+  guestName?: string;
+  guestPhone?: string;
+  roomName?: string;
+  roomType?: string;
 };
 
 export const hotelColumns: ColumnDef<HotelBookingRow>[] = [
@@ -24,21 +22,45 @@ export const hotelColumns: ColumnDef<HotelBookingRow>[] = [
     cell: ({ row }) => <p className="text-14-medium">{row.index + 1}</p>,
   },
   {
-    accessorKey: "guestName",
+    accessorKey: "guest",
     header: "Guest",
-    cell: ({ row }) => (
-      <div>
-        <p className="text-14-medium">{row.original.guestName}</p>
-        <p className="text-12-regular text-dark-600">{row.original.phone}</p>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const booking = row.original;
+      const guest = booking.guest as any;
+      const guestName =
+        booking.guestName ||
+        guest?.name ||
+        (typeof guest === "string" ? "Unknown" : "Unknown");
+      const guestPhone =
+        booking.guestPhone ||
+        guest?.phone ||
+        (typeof guest === "string" ? "" : "");
+
+      return (
+        <div>
+          <p className="text-14-medium">{guestName}</p>
+          {guestPhone && (
+            <p className="text-12-regular text-dark-600">{guestPhone}</p>
+          )}
+        </div>
+      );
+    },
   },
   {
-    accessorKey: "roomType",
+    accessorKey: "room",
     header: "Room",
-    cell: ({ row }) => (
-      <p className="text-14-regular">{row.original.roomType}</p>
-    ),
+    cell: ({ row }) => {
+      const booking = row.original;
+      const room = booking.room as any;
+      const roomName =
+        booking.roomType ||
+        booking.roomName ||
+        room?.name ||
+        room?.label ||
+        (typeof room === "string" ? room : "Unknown Room");
+
+      return <p className="text-14-regular">{roomName}</p>;
+    },
   },
   {
     accessorKey: "status",
@@ -52,30 +74,80 @@ export const hotelColumns: ColumnDef<HotelBookingRow>[] = [
   {
     accessorKey: "purpose",
     header: "Purpose",
-    cell: ({ row }) => (
-      <p className="text-14-regular">{row.original.purpose}</p>
-    ),
+    cell: ({ row }) => {
+      const purpose =
+        (row.original as any).purpose ||
+        (row.original.guest as any)?.purpose ||
+        "N/A";
+      return <p className="text-14-regular">{purpose}</p>;
+    },
   },
   {
     accessorKey: "checkIn",
     header: "Stay",
-    cell: ({ row }) => (
-      <div className="text-12-regular">
-        <p>{formatDateTime(row.original.checkIn).dateOnly}</p>
-        <p className="text-dark-600">
-          → {formatDateTime(row.original.checkOut).dateOnly}
-        </p>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const booking = row.original;
+      const checkIn =
+        booking.checkIn instanceof Date
+          ? booking.checkIn
+          : new Date(booking.checkIn);
+      const checkOut =
+        booking.checkOut instanceof Date
+          ? booking.checkOut
+          : new Date(booking.checkOut);
+
+      return (
+        <div className="text-12-regular">
+          <p>{formatDateTime(checkIn).dateOnly}</p>
+          <p className="text-dark-600">→ {formatDateTime(checkOut).dateOnly}</p>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "specialRequests",
     header: "Special requests",
-    cell: ({ row }) => (
-      <p className="text-12-regular text-dark-600 max-w-xs">
-        {row.original.specialRequests}
-      </p>
-    ),
+    cell: ({ row }) => {
+      const requests = row.original.specialRequests || "";
+      return (
+        <p className="text-12-regular text-dark-600 max-w-xs truncate">
+          {requests || "—"}
+        </p>
+      );
+    },
+  },
+  {
+    id: "actions",
+    header: () => <div className="pl-4">Actions</div>,
+    cell: ({ row }) => {
+      const booking = row.original;
+      const guest = booking.guest as any;
+
+      return (
+        <div className="flex gap-1">
+          {booking.status === "pending" && (
+            <HotelBookingModal
+              guestId={booking.guestId}
+              guestEmail={guest?.email}
+              booking={booking}
+              type="schedule"
+              title="Confirm Booking"
+              description="Please confirm the following details to schedule this booking."
+            />
+          )}
+          {booking.status !== "cancelled" && (
+            <HotelBookingModal
+              guestId={booking.guestId}
+              guestEmail={guest?.email}
+              booking={booking}
+              type="cancel"
+              title="Cancel Booking"
+              description="Are you sure you want to cancel this booking?"
+            />
+          )}
+        </div>
+      );
+    },
   },
 ];
 

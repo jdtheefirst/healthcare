@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { useMemo, useState } from "react";
 
-import { HotelBookingsMock, HotelMetricSnapshot } from "@/constants";
+import { HotelMetricSnapshot } from "@/constants";
 import { Appointment } from "@/types/appwrite.types";
 
 import { columns } from "../table/columns";
@@ -18,7 +18,12 @@ type AdminDualTabsProps = {
     pendingCount: number;
     cancelledCount: number;
   };
-  hotelBookings?: HotelBookingRow[];
+  hotelBookings?: any[]; // Booking[] from Appwrite
+  hotelCounts?: {
+    scheduledCount: number;
+    pendingCount: number;
+    cancelledCount: number;
+  };
 };
 
 const MetricCard = ({
@@ -47,23 +52,14 @@ const MetricCard = ({
 export const AdminDualTabs = ({
   clinicAppointments,
   clinicCounts,
-  hotelBookings = HotelBookingsMock,
+  hotelBookings = [],
+  hotelCounts = {
+    scheduledCount: 0,
+    pendingCount: 0,
+    cancelledCount: 0,
+  },
 }: AdminDualTabsProps) => {
   const [activeTab, setActiveTab] = useState<"clinic" | "hotel">("clinic");
-
-  const hotelCounts = useMemo(() => {
-    return hotelBookings.reduce(
-      (acc, booking) => {
-        acc[booking.status]++;
-        return acc;
-      },
-      {
-        scheduled: 0,
-        pending: 0,
-        cancelled: 0,
-      } as Record<Status, number>
-    );
-  }, [hotelBookings]);
 
   return (
     <section className="space-y-6">
@@ -124,9 +120,21 @@ export const AdminDualTabs = ({
             Hotel snapshot
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <MetricCard label="Confirmed stays" value={hotelCounts.scheduled} accent="green" />
-            <MetricCard label="Pending holds" value={hotelCounts.pending} accent="blue" />
-            <MetricCard label="Cancelled" value={hotelCounts.cancelled} accent="red" />
+            <MetricCard
+              label="Confirmed stays"
+              value={hotelCounts.scheduledCount}
+              accent="green"
+            />
+            <MetricCard
+              label="Pending holds"
+              value={hotelCounts.pendingCount}
+              accent="blue"
+            />
+            <MetricCard
+              label="Cancelled"
+              value={hotelCounts.cancelledCount}
+              accent="red"
+            />
           </div>
           <p className="mt-4 text-12-regular text-dark-600">
             SMS sent this week: {HotelMetricSnapshot.smsSentThisWeek} • Payment-ready

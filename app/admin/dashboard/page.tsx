@@ -2,17 +2,25 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { AdminDualTabs } from "@/components/hotel/AdminDualTabs";
-import { HotelBookingsMock } from "@/constants";
 import { getRecentAppointmentList } from "@/lib/actions/appointment.actions";
+import { getRecentBookingList } from "@/lib/actions/hotel.actions";
 
 const AdminDashboardPage = async () => {
   const appointments = await getRecentAppointmentList();
+  const bookings = await getRecentBookingList();
 
   const clinicDocuments = appointments?.documents ?? [];
   const clinicCounts = {
     scheduledCount: appointments?.scheduledCount ?? 0,
     pendingCount: appointments?.pendingCount ?? 0,
     cancelledCount: appointments?.cancelledCount ?? 0,
+  };
+
+  const hotelDocuments = bookings?.documents ?? [];
+  const hotelCounts = {
+    scheduledCount: bookings?.scheduledCount ?? 0,
+    pendingCount: bookings?.pendingCount ?? 0,
+    cancelledCount: bookings?.cancelledCount ?? 0,
   };
 
   return (
@@ -36,6 +44,9 @@ const AdminDashboardPage = async () => {
           <Link href="/hotel-demo" className="shad-gray-btn rounded-full px-5 py-2">
             View hotel flow
           </Link>
+          <Link href="/admin/rooms" className="shad-gray-btn rounded-full px-5 py-2">
+            Manage Rooms
+          </Link>
           <Link href="/features" className="shad-primary-btn rounded-full px-5 py-2">
             Feature matrix
           </Link>
@@ -45,7 +56,8 @@ const AdminDashboardPage = async () => {
       <AdminDualTabs
         clinicAppointments={clinicDocuments}
         clinicCounts={clinicCounts}
-        hotelBookings={HotelBookingsMock}
+        hotelBookings={hotelDocuments}
+        hotelCounts={hotelCounts}
       />
     </div>
   );

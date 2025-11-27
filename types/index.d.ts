@@ -62,14 +62,25 @@ declare interface CreateGuestParams {
   email: string;
   phone: string;
   purpose: BookingPurpose;
+  guestsCount?: number;
+  vipNotes?: string;
+  consent?: boolean;
 }
 
 declare interface CreateBookingParams {
-  guestId: string;
+  guestId?: string;
   roomId: string;
+  hotelId?: string;
   status: Status;
   checkIn: Date;
   checkOut: Date;
   specialRequests?: string;
   purpose?: BookingPurpose;
+  channel?: "web" | "sms" | "admin";
+  // For creating guest on the fly
+  guestEmail?: string;
+  guestName?: string;
+  guestPhone?: string;
+  guestsCount?: number;
+  roomType?: string; // For display when room doesn't exist yet
 }
