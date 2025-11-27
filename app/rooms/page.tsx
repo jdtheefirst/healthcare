@@ -4,20 +4,27 @@ import { Button } from "@/components/ui/button";
 import { getAllRooms } from "@/lib/actions/room.actions";
 import { getAllHotels } from "@/lib/actions/hotel.actions";
 import { HotelRoomTypes } from "@/constants";
-import { Hotel } from "@/types/appwrite.types";
+import { Hotel, Room } from "@/types/appwrite.types";
 
 export default async function RoomsPage() {
   // Try to get rooms from Appwrite first, fallback to constants
-  let rooms = (await getAllRooms()) as any[];
+  let rooms = (await getAllRooms()) as Room[];
   const hotels = (await getAllHotels()) as Hotel[];
 
-  // If no rooms in Appwrite, use constants
+  // If no rooms in Appwrite, use constants with proper hotel assignment
   if (!rooms || rooms.length === 0) {
+    // Assign rooms to the first hotel if available, otherwise use "default"
+    const defaultHotelId = hotels.length > 0 ? hotels[0].$id : "default";
+
     rooms = HotelRoomTypes.map((room) => ({
       ...room,
-      $id: room.id, // Map id to $id for consistency
-      hotelId: "default",
-    }));
+      $id: room.id,
+      hotelId: defaultHotelId,
+      pricePerNight: room.rate, // Add missing fields for consistency
+      availabilityStatus: "available",
+      bedCount: Math.ceil(room.capacity / 2),
+      floorNumber: 1,
+    })) as any[];
   }
 
   return (
@@ -60,7 +67,12 @@ export default async function RoomsPage() {
         {/* Rooms Grid */}
         <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {rooms.map((room) => (
-            <RoomCard key={room.$id || room.id} room={room} />
+            <RoomCard
+              key={room.$id}
+              room={room}
+              // Pass hotel name for display if available
+              hotelName={hotels.find((h) => h.$id === room.hotelId)?.name}
+            />
           ))}
         </section>
 
@@ -81,10 +93,16 @@ export default async function RoomsPage() {
   );
 }
 
-// Room Card Component
-function RoomCard({ room }: { room: any }) {
+// Room Card Component - Updated to include hotelId in URL
+function RoomCard({
+  room,
+  hotelName,
+}: {
+  room: Room | any;
+  hotelName?: string;
+}) {
   const roomData = {
-    id: room.$id || room.id,
+    id: room.$id,
     name: room.label || room.name,
     type: room.type,
     capacity: room.capacity,
@@ -92,6 +110,7 @@ function RoomCard({ room }: { room: any }) {
     amenities: room.amenities || [],
     description: room.description,
     image: room.image || "/assets/images/room-placeholder.jpg",
+    hotelId: room.hotelId, // Include hotelId
   };
 
   return (
@@ -106,6 +125,11 @@ function RoomCard({ room }: { room: any }) {
         <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-12-semibold">
           ${roomData.rate}/night
         </div>
+        {hotelName && (
+          <div className="absolute top-4 left-4 bg-black/70 text-white px-2 py-1 rounded text-12-regular">
+            {hotelName}
+          </div>
+        )}
       </div>
 
       {/* Room Details */}
@@ -151,9 +175,9 @@ function RoomCard({ room }: { room: any }) {
           </div>
         </div>
 
-        {/* Book Button */}
+        {/* Book Button - Now includes hotelId in URL */}
         <Link
-          href={`/hotel-demo?roomId=${roomData.id}&roomName=${encodeURIComponent(roomData.name)}`}
+          href={`/hotel-demo?roomId=${roomData.id}&roomName=${encodeURIComponent(roomData.name)}&hotelId=${roomData.hotelId}`}
           className="shad-primary-btn w-full rounded-full py-3 text-center block"
         >
           Select Room

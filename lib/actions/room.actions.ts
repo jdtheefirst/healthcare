@@ -3,7 +3,7 @@
 import { ID, Query } from "node-appwrite";
 
 import { HotelRoomTypes } from "@/constants";
-import { Room } from "@/types/appwrite.types";
+import { Hotel, Room } from "@/types/appwrite.types";
 
 import {
   DATABASE_ID,
@@ -74,6 +74,27 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
           ]
         );
 
+        // Common room data for both create and update
+        const roomData = {
+          hotelId: defaultHotelId,
+          label: roomType.name,
+          type: roomType.type,
+          slug: roomSlug,
+          capacity: roomType.capacity,
+          amenities: roomType.amenities || [],
+          rate: roomType.rate,
+          pricePerNight: roomType.rate,
+          bedCount: Math.ceil(roomType.capacity / 2),
+          floorNumber: 1,
+          availabilityStatus: "available",
+          availableFrom: new Date(),
+          availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          description:
+            roomType.description ||
+            `Comfortable ${roomType.type.toLowerCase()} room`,
+          image: "/assets/images/room-placeholder.jpg",
+        };
+
         let room;
         if (existingRooms.documents.length > 0) {
           // Update existing room
@@ -81,21 +102,7 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
             DATABASE_ID!,
             ROOM_COLLECTION_ID!,
             existingRooms.documents[0].$id,
-            {
-              hotelId: defaultHotelId,
-              label: roomType.name,
-              type: roomType.type,
-              slug: roomSlug, // Add slug to update as well
-              capacity: roomType.capacity,
-              amenities: roomType.amenities || [],
-              rate: roomType.rate,
-              pricePerNight: roomType.rate,
-              bedCount: Math.ceil(roomType.capacity / 2),
-              floorNumber: 1,
-              availabilityStatus: "available",
-              availableFrom: new Date(),
-              availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-            }
+            roomData
           );
         } else {
           // Create new room with required slug
@@ -103,28 +110,14 @@ export const syncRoomsToAppwrite = async (hotelId?: string) => {
             DATABASE_ID!,
             ROOM_COLLECTION_ID!,
             ID.unique(),
-            {
-              hotelId: defaultHotelId,
-              label: roomType.name,
-              type: roomType.type,
-              slug: roomSlug, // REQUIRED: Add the slug field
-              capacity: roomType.capacity,
-              amenities: roomType.amenities || [],
-              rate: roomType.rate,
-              pricePerNight: roomType.rate,
-              bedCount: Math.ceil(roomType.capacity / 2),
-              floorNumber: 1,
-              availabilityStatus: "available",
-              availableFrom: new Date(),
-              availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
-            }
+            roomData
           );
         }
 
         syncedRooms.push(parseStringify(room));
-        console.log(`Synced room: ${roomType.name} (${roomSlug})`);
+        console.log(`✅ Synced room: ${roomType.name} (${roomSlug})`);
       } catch (error) {
-        console.error(`Error syncing room ${roomType.name}:`, error);
+        console.error(`❌ Error syncing room ${roomType.name}:`, error);
       }
     }
 
@@ -190,6 +183,58 @@ export const getRoomByName = async (roomName: string) => {
       : null;
   } catch (error) {
     console.error("Error fetching room by name:", error);
+    return null;
+  }
+};
+
+export const getRoomsByHotel = async (hotelId: string) => {
+  try {
+    if (!ROOM_COLLECTION_ID) return [];
+
+    const rooms = await databases.listDocuments(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      [Query.equal("hotelId", hotelId)]
+    );
+
+    return rooms.documents as unknown as Room[];
+  } catch (error) {
+    console.error("Error fetching rooms by hotel:", error);
+    return [];
+  }
+};
+
+// Get room with full details including hotel
+export const getRoomWithHotel = async (roomId: string) => {
+  try {
+    if (!ROOM_COLLECTION_ID) return null;
+
+    const room = (await databases.getDocument(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      roomId
+    )) as unknown as Room;
+
+    // If we have the room and it has a hotelId, try to get hotel details
+    let hotel = null;
+    if (room.hotelId && HOTEL_COLLECTION_ID) {
+      try {
+        hotel = (await databases.getDocument(
+          DATABASE_ID!,
+          HOTEL_COLLECTION_ID!,
+          room.hotelId
+        )) as unknown as Hotel;
+      } catch (error) {
+        console.warn("Hotel not found for room:", room.hotelId);
+      }
+    }
+
+    return {
+      ...room,
+      hotel,
+    };
+  } catch (error) {
+    console.error("Error fetching room with hotel:", error);
     return null;
   }
 };

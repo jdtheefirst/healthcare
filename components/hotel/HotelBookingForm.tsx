@@ -55,6 +55,7 @@ export const HotelBookingForm = ({
   // Get preselected room from URL
   const preselectedRoomId = searchParams?.get("roomId");
   const preselectedRoomName = searchParams?.get("roomName");
+  const preselectedHotelId = searchParams?.get("hotelId");
 
   // Get guest info from sessionStorage if available
   useEffect(() => {
@@ -74,14 +75,20 @@ export const HotelBookingForm = ({
         const appwriteHotels = await getAllHotels();
         setHotels(appwriteHotels as Hotel[]);
 
-        let defaultHotelId = "";
+        let defaultHotelId = preselectedHotelId || "";
         let fetchedRooms: (Room | any)[] = [];
         let hasRealRooms = false;
 
         if (appwriteHotels.length > 0) {
-          // Set first hotel as default
-          const firstHotel = appwriteHotels[0] as Hotel;
-          defaultHotelId = firstHotel.$id;
+          // Use preselected hotel or first hotel as default
+          if (
+            preselectedHotelId &&
+            appwriteHotels.some((h) => h.$id === preselectedHotelId)
+          ) {
+            defaultHotelId = preselectedHotelId;
+          } else {
+            defaultHotelId = appwriteHotels[0].$id;
+          }
           setSelectedHotelId(defaultHotelId);
 
           // Fetch rooms for the first hotel
@@ -126,7 +133,7 @@ export const HotelBookingForm = ({
     };
 
     fetchData();
-  }, [preselectedRoomId, preselectedRoomName]);
+  }, [preselectedRoomId, preselectedRoomName, preselectedHotelId]);
 
   // Helper function to safely get room label
   const getRoomLabel = (room: Room | any): string => {
