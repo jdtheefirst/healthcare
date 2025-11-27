@@ -1,4 +1,4 @@
-# CarePulse Presentation Template
+# Presentation Template
 
 ## For Healthcare Clinics
 
