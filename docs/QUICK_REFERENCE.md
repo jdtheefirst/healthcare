@@ -1,4 +1,4 @@
-# CarePulse Quick Reference Card
+# Quick Reference Card
 
 ## 🏥 For Healthcare Clinics
 
