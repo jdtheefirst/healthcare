@@ -7,9 +7,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { createHotel } from "@/lib/actions/hotel.actions";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { Form, FormControl } from "@/components/ui/form";
 import CustomFormField, { FormFieldType } from "@/components/CustomFormField";
-import { on } from "events";
+import { FileUploader } from "../FileUploader";
 
 const hotelSchema = z.object({
   name: z.string().min(2, "Hotel name must be at least 2 characters"),
@@ -101,6 +101,18 @@ export function CreateHotelForm({
             name="amenities"
             label="Hotel Amenities (comma-separated)"
             placeholder="Swimming Pool, Gym, Restaurant, Spa..."
+          />
+
+          <CustomFormField
+            fieldType={FormFieldType.SKELETON}
+            control={form.control}
+            name="logo"
+            label="Upload Hotel Logo"
+            renderSkeleton={(field) => (
+              <FormControl>
+                <FileUploader files={field.value} onChange={field.onChange} />
+              </FormControl>
+            )}
           />
 
           <div className="flex gap-4 pt-4">

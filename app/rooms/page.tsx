@@ -1,6 +1,5 @@
 // app/rooms/page.tsx
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { getAllRooms } from "@/lib/actions/room.actions";
 import { getAllHotels } from "@/lib/actions/hotel.actions";
 import { HotelRoomTypes } from "@/constants";
@@ -33,19 +32,20 @@ export default async function RoomsPage() {
     <div className="min-h-screen bg-black">
       <main className="mx-auto max-w-7xl px-3 sm:px-6 py-10">
         {/* Header */}
-        <header className="flex items-center justify-between mb-8">
+        <header className="mb-8 space-y-4">
+          <Link
+            href="/hotel-demo"
+            className="text-sm text-gray-500 hover:text-white inline-flex items-center gap-1"
+          >
+            ← Back to Hotel Demo
+          </Link>
+
           <div>
             <h1 className="text-36-bold">Available Rooms</h1>
             <p className="text-16-regular text-dark-700 mt-2">
               Choose your perfect room for a comfortable stay
             </p>
           </div>
-          <Link
-            href="/hotel-demo"
-            className="shad-gray-btn rounded-full px-5 py-2"
-          >
-            Back to Hotel Demo
-          </Link>
         </header>
 
         {/* Hotels Filter (if multiple hotels) & Rooms Grid  */}

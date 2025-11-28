@@ -12,6 +12,7 @@ export default function RoomCard({
   const roomData = {
     id: room.$id,
     name: room.label || room.name,
+    slug: room.slug,
     type: room.type,
     capacity: room.capacity,
     rate: room.rate || room.pricePerNight,
@@ -43,7 +44,12 @@ export default function RoomCard({
       {/* Room Details */}
       <div className="p-6">
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-18-bold">{roomData.name}</h3>
+          <Link
+            href={`/rooms/${roomData.slug}`}
+            className="text-18-semibold text-dark-800 hover:text-green-500 transition-colors"
+          >
+            {roomData.name}
+          </Link>
           <span className="text-12-regular text-dark-600 bg-dark-400 px-2 py-1 rounded">
             {roomData.type}
           </span>

@@ -8,9 +8,10 @@ import { z } from "zod";
 import { Hotel } from "@/types/appwrite.types";
 import { createRoom } from "@/lib/actions/room.actions";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { Form, FormControl } from "@/components/ui/form";
 import CustomFormField, { FormFieldType } from "@/components/CustomFormField";
 import { SelectItem } from "../ui/select";
+import { FileUploader } from "../FileUploader";
 
 const roomSchema = z.object({
   hotelId: z.string().min(1, "Please select a hotel"),
@@ -150,6 +151,18 @@ export function CreateRoomForm({
             name="amenities"
             label="Amenities (comma-separated)"
             placeholder="WiFi, TV, Air Conditioning, Mini Bar..."
+          />
+
+          <CustomFormField
+            fieldType={FormFieldType.SKELETON}
+            control={form.control}
+            name="image"
+            label="Add Room Image"
+            renderSkeleton={(field) => (
+              <FormControl>
+                <FileUploader files={field.value} onChange={field.onChange} />
+              </FormControl>
+            )}
           />
 
           <div className="flex gap-4 pt-4">

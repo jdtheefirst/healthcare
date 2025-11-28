@@ -1,8 +1,7 @@
 // app/admin/rooms/page.tsx
-import Link from "next/link";
 import { getAllRooms } from "@/lib/actions/room.actions";
 import { getAllHotels } from "@/lib/actions/hotel.actions";
-import AdminManagementClient from "@/components/hotel/RoomsManagementClient";
+import ManagementClient from "@/components/hotel/RoomsManagementClient";
 
 const RoomsManagementPage = async () => {
   // Server-side data fetching
@@ -11,7 +10,7 @@ const RoomsManagementPage = async () => {
     getAllHotels() as any,
   ]);
 
-  return <AdminManagementClient initialRooms={rooms} initialHotels={hotels} />;
+  return <ManagementClient initialRooms={rooms} initialHotels={hotels} />;
 };
 
 export default RoomsManagementPage;

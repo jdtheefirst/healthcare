@@ -425,3 +425,59 @@ export const getRoomWithHotel = async (roomId: string) => {
     return null;
   }
 };
+
+// lib/actions/room.actions.ts
+export const getRoomBySlug = async (slug: string) => {
+  try {
+    const rooms = await databases.listDocuments(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      [Query.equal("slug", slug)]
+    );
+
+    if (rooms.documents.length === 0) return null;
+
+    const room = rooms.documents[0] as unknown as Room;
+
+    // Get hotel details
+    let hotel = null;
+    if (room.hotelId && HOTEL_COLLECTION_ID) {
+      try {
+        hotel = (await databases.getDocument(
+          DATABASE_ID!,
+          HOTEL_COLLECTION_ID!,
+          room.hotelId
+        )) as unknown as Hotel;
+      } catch (error) {
+        console.warn("Hotel not found for room:", room.hotelId);
+      }
+    }
+
+    // Get other rooms from the same hotel
+    let similarRooms: Room[] = [];
+    if (room.hotelId) {
+      try {
+        similarRooms = (await databases.listDocuments(
+          DATABASE_ID!,
+          ROOM_COLLECTION_ID!,
+          [
+            Query.equal("hotelId", room.hotelId),
+            Query.notEqual("$id", room.$id),
+            Query.limit(3),
+          ]
+        )) as unknown as Room[];
+      } catch (error) {
+        console.warn("Error fetching similar rooms:", error);
+      }
+    }
+
+    return parseStringify({
+      ...room,
+      hotel,
+      similarRooms,
+    });
+  } catch (error) {
+    console.error("Error fetching room by slug:", error);
+    return null;
+  }
+};

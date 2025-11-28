@@ -66,7 +66,7 @@ const AdminManagementClient = ({
   };
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-[5%] py-10">
+    <div className="mx-auto flex max-w-7xl flex-col gap-8 px-2 sm:px-[5%] py-10">
       {/* Header */}
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ const AdminManagementClient = ({
       )}
 
       {/* Navigation Tabs */}
-      <section className="rounded-3xl border border-dark-400 bg-dark-200 p-6">
+      <section className="rounded-3xl border border-dark-400 bg-dark-200 p-2 sm:p-6">
         <div className="flex flex-wrap gap-3">
           <Button
             variant={activeView === "rooms" ? "default" : "outline"}
@@ -142,7 +142,7 @@ const AdminManagementClient = ({
 
         {/* Sync View */}
         {activeView === "sync" && (
-          <section className="rounded-3xl border border-dark-400 bg-dark-200 p-8">
+          <section className="rounded-3xl border border-dark-400 bg-dark-200 p-2 sm:p-8">
             <h1 className="text-24-bold mb-4">Sync Default Rooms</h1>
             <p className="text-16-regular text-dark-700 mb-6">
               This will create or update room documents in Appwrite based on the

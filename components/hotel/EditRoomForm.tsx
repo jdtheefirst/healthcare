@@ -10,6 +10,7 @@ import { updateRoom } from "@/lib/actions/room.actions";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import CustomFormField, { FormFieldType } from "@/components/CustomFormField";
+import { SelectItem } from "../ui/select";
 
 const roomSchema = z.object({
   hotelId: z.string().min(1, "Please select a hotel"),
@@ -90,9 +91,12 @@ export function EditRoomForm({
             placeholder="Select hotel"
           >
             {hotels.map((hotel) => (
-              <option key={hotel.$id} value={hotel.$id}>
-                {hotel.name} - {hotel.location}
-              </option>
+              <SelectItem key={hotel.$id} value={hotel.$id}>
+                <span className="text-14-medium">{hotel.name}</span>
+                <span className="text-12-regular text-dark-600 pl-2">
+                  {hotel.location}
+                </span>
+              </SelectItem>
             ))}
           </CustomFormField>
 
@@ -112,11 +116,11 @@ export function EditRoomForm({
               label="Room Type"
               placeholder="Select type"
             >
-              <option value="Suite">Suite</option>
-              <option value="King">King</option>
-              <option value="Queen">Queen</option>
-              <option value="Twin">Twin</option>
-              <option value="Apartment">Apartment</option>
+              <SelectItem value="Suite">Suite</SelectItem>
+              <SelectItem value="King">King</SelectItem>
+              <SelectItem value="Queen">Queen</SelectItem>
+              <SelectItem value="Twin">Twin</SelectItem>
+              <SelectItem value="Apartment">Apartment</SelectItem>
             </CustomFormField>
           </div>
 
@@ -146,9 +150,9 @@ export function EditRoomForm({
             name="availabilityStatus"
             label="Availability Status"
           >
-            <option value="available">Available</option>
-            <option value="maintenance">Under Maintenance</option>
-            <option value="occupied">Occupied</option>
+            <SelectItem value="available">Available</SelectItem>
+            <SelectItem value="maintenance">Under Maintenance</SelectItem>
+            <SelectItem value="occupied">Occupied</SelectItem>
           </CustomFormField>
 
           <CustomFormField
