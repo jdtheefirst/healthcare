@@ -21,6 +21,9 @@ const roomSchema = z.object({
   rate: z.number().min(0, "Rate must be a positive number"),
   description: z.string().optional(),
   amenities: z.string().optional(),
+  image: z.any().optional(),
+  bedCount: z.number().optional(),
+  floorNumber: z.number().optional(),
 });
 
 interface CreateRoomFormProps {
@@ -48,18 +51,45 @@ export function CreateRoomForm({
       rate: 100,
       description: "",
       amenities: "",
+      image: null,
+      bedCount: undefined,
+      floorNumber: undefined,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof roomSchema>) => {
     setIsLoading(true);
+
     try {
-      await createRoom({
-        ...values,
-        amenities: values.amenities
-          ? values.amenities.split(",").map((a) => a.trim())
-          : [],
-      });
+      // Create FormData for file upload
+      const formData = new FormData();
+
+      // Append all room data
+      formData.append("hotelId", values.hotelId);
+      formData.append("label", values.label);
+      formData.append("type", values.type);
+      formData.append("capacity", values.capacity.toString());
+      formData.append("rate", values.rate.toString());
+      formData.append("description", values.description || "");
+      formData.append("bedCount", values.bedCount?.toString() || "");
+      formData.append("floorNumber", values.floorNumber?.toString() || "");
+      formData.append(
+        "amenities",
+        values.amenities
+          ? values.amenities
+              .split(",")
+              .map((a) => a.trim())
+              .join(",")
+          : ""
+      );
+
+      // Append the image file if it exists
+      if (values.image && values.image.length > 0) {
+        formData.append("image", values.image[0]); // Directly append the file
+      }
+
+      // Use FormData in the server action
+      await createRoom(formData);
       onRoomCreate(values);
       onSuccess();
     } catch (error) {

@@ -1,40 +1,48 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { ID, Query } from "node-appwrite";
+import { ID, InputFile, Query } from "node-appwrite";
 
+// Import your Appwrite configuration
+import {
+  DATABASE_ID,
+  HOTEL_COLLECTION_ID,
+  BUCKET_ID, // You need a bucket for file storage
+  databases,
+  storage,
+  ROOM_COLLECTION_ID,
+  BOOKING_COLLECTION_ID,
+  GUEST_COLLECTION_ID,
+  users,
+  messaging,
+  PROJECT_ID,
+} from "../appwrite.config";
+import { formatDateTime, parseStringify } from "../utils";
 import {
   Booking,
-  CreateBookingParams,
   Guest,
   Hotel,
   Room,
   UpdateBookingParams,
 } from "@/types/appwrite.types";
 
-import {
-  BOOKING_COLLECTION_ID,
-  DATABASE_ID,
-  GUEST_COLLECTION_ID,
-  HOTEL_COLLECTION_ID,
-  ROOM_COLLECTION_ID,
-  databases,
-  messaging,
-  users,
-} from "../appwrite.config";
-import { formatDateTime, parseStringify } from "../utils";
-
 // CREATE HOTEL
-export const createHotel = async (hotelData: {
-  name: string;
-  location: string;
-  description?: string;
-  amenities?: string[];
-  logo?: string;
-}) => {
+export const createHotel = async (formData: FormData) => {
   try {
+    // Extract form data
+    const name = formData.get("name") as string;
+    const location = formData.get("location") as string;
+    const description = formData.get("description") as string;
+    const amenitiesString = formData.get("amenities") as string;
+    const imageFile = formData.get("image") as File | null;
+
+    // Validate required fields
+    if (!name || !location) {
+      throw new Error("Name and location are required");
+    }
+
     // Generate slug from name
-    const slug = hotelData.name
+    const slug = name
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "")
@@ -52,22 +60,59 @@ export const createHotel = async (hotelData: {
       throw new Error("A hotel with this name already exists");
     }
 
+    let imageUrl = null;
+
+    // Handle image upload if file exists
+    if (imageFile && imageFile.size > 0) {
+      try {
+        // Convert File to Buffer for Appwrite
+        const arrayBuffer = await imageFile.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Create InputFile for Appwrite
+        const inputFile = InputFile.fromBuffer(buffer, imageFile.name);
+
+        // Upload to Appwrite Storage
+        const file = await storage.createFile(
+          BUCKET_ID!,
+          ID.unique(),
+          inputFile
+        );
+
+        // Get the file URL (you might need to configure your domain)
+        // For Appwrite Cloud, you can use:
+        imageUrl = `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
+
+        // For self-hosted Appwrite, use your domain:
+        // imageUrl = `https://your-domain/v1/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=YOUR_PROJECT_ID`;
+
+        console.log("✅ Image uploaded successfully:", file.$id);
+      } catch (uploadError) {
+        console.error("❌ Error uploading image:", uploadError);
+        // You might want to continue without the image or throw an error
+      }
+    }
+
+    // Create hotel document
     const newHotel = await databases.createDocument(
       DATABASE_ID!,
       HOTEL_COLLECTION_ID!,
       ID.unique(),
       {
-        name: hotelData.name,
-        location: hotelData.location,
-        description: hotelData.description || "",
-        amenities: hotelData.amenities || [],
-        logo: hotelData.logo || null,
-        slug: slug,
+        name,
+        location,
+        description: description || "",
+        amenities: amenitiesString
+          ? amenitiesString.split(",").map((a) => a.trim())
+          : [],
+        image: imageUrl, // Store the image URL
+        slug,
       }
     );
 
     console.log("✅ Hotel created successfully:", newHotel.$id);
 
+    // Revalidate paths
     revalidatePath("/admin/rooms");
     revalidatePath("/admin/dashboard");
     revalidatePath("/rooms");

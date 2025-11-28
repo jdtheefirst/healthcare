@@ -1,34 +1,45 @@
 "use server";
 
-import { ID, Query } from "node-appwrite";
+import { ID, InputFile, Query } from "node-appwrite";
 
 import { HotelRoomTypes } from "@/constants";
 import { Hotel, Room } from "@/types/appwrite.types";
 
 import {
   BOOKING_COLLECTION_ID,
+  BUCKET_ID,
   DATABASE_ID,
   HOTEL_COLLECTION_ID,
+  PROJECT_ID,
   ROOM_COLLECTION_ID,
   databases,
+  storage,
 } from "../appwrite.config";
 import { revalidatePath } from "next/cache";
 import { parseStringify } from "../utils";
 
 // CREATE ROOM
-export const createRoom = async (roomData: {
-  hotelId: string;
-  label: string;
-  type: string;
-  capacity: number;
-  rate: number;
-  description?: string;
-  amenities?: string[];
-  bedCount?: number;
-  floorNumber?: number;
-  image?: string;
-}) => {
+export const createRoom = async (formData: FormData) => {
   try {
+    // Extract form data
+    const hotelId = formData.get("hotelId") as string;
+    const label = formData.get("label") as string;
+    const type = formData.get("type") as string;
+    const capacity = parseInt(formData.get("capacity") as string);
+    const rate = parseInt(formData.get("rate") as string);
+    const description = formData.get("description") as string;
+    const bedCount = formData.get("bedCount") as string;
+    const floorNumber = formData.get("floorNumber") as string;
+    const amenitiesString = formData.get("amenities") as string;
+    const imageFile = formData.get("image") as File | null;
+
+    // Validate required fields
+    if (!hotelId || !label || !type || !capacity || !rate) {
+      throw new Error(
+        "Missing required fields: hotelId, label, type, capacity, rate"
+      );
+    }
+
     // Validate that the hotel exists
     if (!HOTEL_COLLECTION_ID) {
       throw new Error("HOTEL_COLLECTION_ID is not configured");
@@ -37,7 +48,7 @@ export const createRoom = async (roomData: {
     const hotel = await databases.getDocument(
       DATABASE_ID!,
       HOTEL_COLLECTION_ID!,
-      roomData.hotelId
+      hotelId
     );
 
     if (!hotel) {
@@ -45,40 +56,101 @@ export const createRoom = async (roomData: {
     }
 
     // Generate slug from label
-    const slug = roomData.label
+    const slug = label
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "")
       .replace(/-+/g, "-")
       .trim();
 
+    // Check if Room with same slug already exists
+    const existingRooms = await databases.listDocuments(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      [Query.equal("slug", slug)]
+    );
+
+    if (existingRooms.total > 0) {
+      throw new Error("A room with this name already exists");
+    }
+
+    let imageUrl = "/assets/images/room-placeholder.jpg";
+
+    // Handle image upload if file exists
+    if (imageFile && imageFile.size > 0) {
+      try {
+        // Convert File to Buffer for Appwrite
+        const arrayBuffer = await imageFile.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Create InputFile for Appwrite
+        const inputFile = InputFile.fromBuffer(buffer, imageFile.name);
+
+        // Upload to Appwrite Storage
+        const file = await storage.createFile(
+          BUCKET_ID!,
+          ID.unique(),
+          inputFile
+        );
+
+        // Construct the file URL
+        // For Appwrite Cloud:
+        imageUrl = `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
+
+        // For self-hosted Appwrite:
+        // imageUrl = `https://your-domain/v1/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+
+        console.log("✅ Room image uploaded successfully:", file.$id);
+      } catch (uploadError) {
+        console.error("❌ Error uploading room image:", uploadError);
+        // Continue with placeholder image if upload fails
+      }
+    }
+
+    // Parse amenities
+    const amenities = amenitiesString
+      ? amenitiesString
+          .split(",")
+          .map((a) => a.trim())
+          .filter((a) => a.length > 0)
+      : [];
+
+    // Calculate default bedCount if not provided
+    const calculatedBedCount = bedCount
+      ? parseInt(bedCount)
+      : Math.ceil(capacity / 2);
+
+    // Calculate default floorNumber if not provided
+    const calculatedFloorNumber = floorNumber ? parseInt(floorNumber) : 1;
+
     const newRoom = await databases.createDocument(
       DATABASE_ID!,
       ROOM_COLLECTION_ID!,
       ID.unique(),
       {
-        hotelId: roomData.hotelId,
-        label: roomData.label,
-        type: roomData.type,
+        hotelId: hotelId,
+        label: label,
+        type: type,
         slug: slug,
-        capacity: roomData.capacity,
-        amenities: roomData.amenities || [],
-        rate: roomData.rate,
-        pricePerNight: roomData.rate,
-        bedCount: roomData.bedCount || Math.ceil(roomData.capacity / 2),
-        floorNumber: roomData.floorNumber || 1,
+        capacity: capacity,
+        amenities: amenities,
+        rate: rate,
+        pricePerNight: rate,
+        bedCount: calculatedBedCount,
+        floorNumber: calculatedFloorNumber,
         availabilityStatus: "available",
-        availableFrom: new Date(),
-        availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
-        description:
-          roomData.description ||
-          `Comfortable ${roomData.type.toLowerCase()} room`,
-        image: roomData.image || "/assets/images/room-placeholder.jpg",
+        availableFrom: new Date().toISOString(),
+        availableTo: new Date(
+          Date.now() + 365 * 24 * 60 * 60 * 1000
+        ).toISOString(), // 1 year from now
+        description: description || `Comfortable ${type.toLowerCase()} room`,
+        image: imageUrl,
       }
     );
 
     console.log("✅ Room created successfully:", newRoom.$id);
 
+    // Revalidate paths
     revalidatePath("/admin/rooms");
     revalidatePath("/admin/dashboard");
     revalidatePath("/rooms");

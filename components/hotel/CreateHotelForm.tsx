@@ -16,6 +16,8 @@ const hotelSchema = z.object({
   location: z.string().min(2, "Location must be at least 2 characters"),
   description: z.string().optional(),
   amenities: z.string().optional(),
+  logo: z.any().optional(),
+  image: z.any().optional(),
 });
 
 interface CreateHotelFormProps {
@@ -38,18 +40,38 @@ export function CreateHotelForm({
       location: "",
       description: "",
       amenities: "",
+      logo: null,
+      image: null,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof hotelSchema>) => {
     setIsLoading(true);
+
     try {
-      await createHotel({
-        ...values,
-        amenities: values.amenities
-          ? values.amenities.split(",").map((a) => a.trim())
-          : [],
-      });
+      // Create FormData for file upload
+      const formData = new FormData();
+
+      // Append all hotel data
+      formData.append("name", values.name);
+      formData.append("location", values.location);
+      formData.append("description", values.description || "");
+      formData.append(
+        "amenities",
+        values.amenities
+          ? values.amenities
+              .split(",")
+              .map((a) => a.trim())
+              .join(",")
+          : ""
+      );
+
+      // Append the image file if it exists
+      if (values.image && values.image.length > 0) {
+        formData.append("image", values.image[0]); // Directly append the file
+      }
+
+      await createHotel(formData);
       onHotelCreate({
         ...values,
         amenities: values.amenities
@@ -106,8 +128,8 @@ export function CreateHotelForm({
           <CustomFormField
             fieldType={FormFieldType.SKELETON}
             control={form.control}
-            name="logo"
-            label="Upload Hotel Logo"
+            name="image"
+            label="Upload Hotel Image"
             renderSkeleton={(field) => (
               <FormControl>
                 <FileUploader files={field.value} onChange={field.onChange} />
