@@ -6,12 +6,199 @@ import { HotelRoomTypes } from "@/constants";
 import { Hotel, Room } from "@/types/appwrite.types";
 
 import {
+  BOOKING_COLLECTION_ID,
   DATABASE_ID,
   HOTEL_COLLECTION_ID,
   ROOM_COLLECTION_ID,
   databases,
 } from "../appwrite.config";
+import { revalidatePath } from "next/cache";
 import { parseStringify } from "../utils";
+
+// CREATE ROOM
+export const createRoom = async (roomData: {
+  hotelId: string;
+  label: string;
+  type: string;
+  capacity: number;
+  rate: number;
+  description?: string;
+  amenities?: string[];
+  bedCount?: number;
+  floorNumber?: number;
+  image?: string;
+}) => {
+  try {
+    // Validate that the hotel exists
+    if (!HOTEL_COLLECTION_ID) {
+      throw new Error("HOTEL_COLLECTION_ID is not configured");
+    }
+
+    const hotel = await databases.getDocument(
+      DATABASE_ID!,
+      HOTEL_COLLECTION_ID!,
+      roomData.hotelId
+    );
+
+    if (!hotel) {
+      throw new Error("Hotel not found");
+    }
+
+    // Generate slug from label
+    const slug = roomData.label
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .trim();
+
+    const newRoom = await databases.createDocument(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      ID.unique(),
+      {
+        hotelId: roomData.hotelId,
+        label: roomData.label,
+        type: roomData.type,
+        slug: slug,
+        capacity: roomData.capacity,
+        amenities: roomData.amenities || [],
+        rate: roomData.rate,
+        pricePerNight: roomData.rate,
+        bedCount: roomData.bedCount || Math.ceil(roomData.capacity / 2),
+        floorNumber: roomData.floorNumber || 1,
+        availabilityStatus: "available",
+        availableFrom: new Date(),
+        availableTo: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+        description:
+          roomData.description ||
+          `Comfortable ${roomData.type.toLowerCase()} room`,
+        image: roomData.image || "/assets/images/room-placeholder.jpg",
+      }
+    );
+
+    console.log("✅ Room created successfully:", newRoom.$id);
+
+    revalidatePath("/admin/rooms");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/rooms");
+
+    return parseStringify(newRoom);
+  } catch (error) {
+    console.error("❌ Error creating room:", error);
+    throw error;
+  }
+};
+
+// UPDATE ROOM
+export const updateRoom = async (
+  roomId: string,
+  updates: {
+    label?: string;
+    type?: string;
+    capacity?: number;
+    rate?: number;
+    description?: string;
+    amenities?: string[];
+    bedCount?: number;
+    floorNumber?: number;
+    availabilityStatus?: "available" | "maintenance" | "occupied";
+    image?: string;
+  }
+) => {
+  try {
+    // Check if room exists
+    const existingRoom = await databases.getDocument(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      roomId
+    );
+
+    if (!existingRoom) {
+      throw new Error("Room not found");
+    }
+
+    // If label is being updated, regenerate slug
+    let updateData: any = { ...updates };
+    if (updates.label) {
+      const slug = updates.label
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "")
+        .replace(/-+/g, "-")
+        .trim();
+      updateData.slug = slug;
+    }
+
+    // If rate is updated, also update pricePerNight
+    if (updates.rate) {
+      updateData.pricePerNight = updates.rate;
+    }
+
+    const updatedRoom = await databases.updateDocument(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      roomId,
+      updateData
+    );
+
+    console.log("✅ Room updated successfully:", roomId);
+
+    revalidatePath("/admin/rooms");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/rooms");
+
+    return parseStringify(updatedRoom);
+  } catch (error) {
+    console.error("❌ Error updating room:", error);
+    throw error;
+  }
+};
+
+// DELETE ROOM
+export const deleteRoom = async (roomId: string) => {
+  try {
+    // Check if room exists
+    const existingRoom = await databases.getDocument(
+      DATABASE_ID!,
+      ROOM_COLLECTION_ID!,
+      roomId
+    );
+
+    if (!existingRoom) {
+      throw new Error("Room not found");
+    }
+
+    // Check if room has any active bookings
+    if (BOOKING_COLLECTION_ID) {
+      const activeBookings = await databases.listDocuments(
+        DATABASE_ID!,
+        BOOKING_COLLECTION_ID!,
+        [Query.equal("roomId", roomId), Query.notEqual("status", "cancelled")]
+      );
+
+      if (activeBookings.total > 0) {
+        throw new Error(
+          "Cannot delete room with active bookings. Cancel bookings first."
+        );
+      }
+    }
+
+    // Delete the room
+    await databases.deleteDocument(DATABASE_ID!, ROOM_COLLECTION_ID!, roomId);
+
+    console.log("✅ Room deleted successfully:", roomId);
+
+    revalidatePath("/admin/rooms");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/rooms");
+
+    return { success: true, message: "Room deleted successfully" };
+  } catch (error) {
+    console.error("❌ Error deleting room:", error);
+    throw error;
+  }
+};
 
 // SYNC ROOMS FROM CONSTANTS TO APPWRITE
 // This ensures HotelRoomTypes constants are backed by real room documents

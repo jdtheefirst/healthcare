@@ -24,6 +24,188 @@ import {
 } from "../appwrite.config";
 import { formatDateTime, parseStringify } from "../utils";
 
+// CREATE HOTEL
+export const createHotel = async (hotelData: {
+  name: string;
+  location: string;
+  description?: string;
+  amenities?: string[];
+  logo?: string;
+}) => {
+  try {
+    // Generate slug from name
+    const slug = hotelData.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .trim();
+
+    // Check if hotel with same slug already exists
+    const existingHotels = await databases.listDocuments(
+      DATABASE_ID!,
+      HOTEL_COLLECTION_ID!,
+      [Query.equal("slug", slug)]
+    );
+
+    if (existingHotels.total > 0) {
+      throw new Error("A hotel with this name already exists");
+    }
+
+    const newHotel = await databases.createDocument(
+      DATABASE_ID!,
+      HOTEL_COLLECTION_ID!,
+      ID.unique(),
+      {
+        name: hotelData.name,
+        location: hotelData.location,
+        description: hotelData.description || "",
+        amenities: hotelData.amenities || [],
+        logo: hotelData.logo || null,
+        slug: slug,
+      }
+    );
+
+    console.log("✅ Hotel created successfully:", newHotel.$id);
+
+    revalidatePath("/admin/rooms");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/rooms");
+
+    return parseStringify(newHotel);
+  } catch (error) {
+    console.error("❌ Error creating hotel:", error);
+    throw error;
+  }
+};
+
+// UPDATE HOTEL
+export const updateHotel = async (
+  hotelId: string,
+  updates: {
+    name?: string;
+    location?: string;
+    description?: string;
+    amenities?: string[];
+    logo?: string;
+  }
+) => {
+  try {
+    // Check if hotel exists
+    const existingHotel = await databases.getDocument(
+      DATABASE_ID!,
+      HOTEL_COLLECTION_ID!,
+      hotelId
+    );
+
+    if (!existingHotel) {
+      throw new Error("Hotel not found");
+    }
+
+    // If name is being updated, regenerate slug
+    let updateData: any = { ...updates };
+    if (updates.name) {
+      const slug = updates.name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "")
+        .replace(/-+/g, "-")
+        .trim();
+
+      // Check if slug is already taken by another hotel
+      const existingHotels = await databases.listDocuments(
+        DATABASE_ID!,
+        HOTEL_COLLECTION_ID!,
+        [Query.equal("slug", slug), Query.notEqual("$id", hotelId)]
+      );
+
+      if (existingHotels.total > 0) {
+        throw new Error("Another hotel with this name already exists");
+      }
+
+      updateData.slug = slug;
+    }
+
+    const updatedHotel = await databases.updateDocument(
+      DATABASE_ID!,
+      HOTEL_COLLECTION_ID!,
+      hotelId,
+      updateData
+    );
+
+    console.log("✅ Hotel updated successfully:", hotelId);
+
+    revalidatePath("/admin/rooms");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/rooms");
+
+    return parseStringify(updatedHotel);
+  } catch (error) {
+    console.error("❌ Error updating hotel:", error);
+    throw error;
+  }
+};
+
+// DELETE HOTEL
+export const deleteHotel = async (hotelId: string) => {
+  try {
+    // Check if hotel exists
+    const existingHotel = await databases.getDocument(
+      DATABASE_ID!,
+      HOTEL_COLLECTION_ID!,
+      hotelId
+    );
+
+    if (!existingHotel) {
+      throw new Error("Hotel not found");
+    }
+
+    // Check if hotel has any rooms
+    if (ROOM_COLLECTION_ID) {
+      const hotelRooms = await databases.listDocuments(
+        DATABASE_ID!,
+        ROOM_COLLECTION_ID!,
+        [Query.equal("hotelId", hotelId)]
+      );
+
+      if (hotelRooms.total > 0) {
+        throw new Error(
+          "Cannot delete hotel with existing rooms. Delete rooms first."
+        );
+      }
+    }
+
+    // Check if hotel has any bookings
+    if (BOOKING_COLLECTION_ID) {
+      const hotelBookings = await databases.listDocuments(
+        DATABASE_ID!,
+        BOOKING_COLLECTION_ID!,
+        [Query.equal("hotelId", hotelId)]
+      );
+
+      if (hotelBookings.total > 0) {
+        throw new Error(
+          "Cannot delete hotel with existing bookings. Handle bookings first."
+        );
+      }
+    }
+
+    // Delete the hotel
+    await databases.deleteDocument(DATABASE_ID!, HOTEL_COLLECTION_ID!, hotelId);
+
+    console.log("✅ Hotel deleted successfully:", hotelId);
+
+    revalidatePath("/admin/rooms");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/rooms");
+
+    return { success: true, message: "Hotel deleted successfully" };
+  } catch (error) {
+    console.error("❌ Error deleting hotel:", error);
+    throw error;
+  }
+};
+
 // CREATE GUEST (no auth required - direct collection write)
 export const createGuest = async (guest: CreateGuestParams) => {
   try {
