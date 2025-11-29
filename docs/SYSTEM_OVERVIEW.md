@@ -2,7 +2,7 @@
 
 ## One Platform, Two Industries, Unlimited Possibilities
 
-CarePulse is a flexible booking management platform that powers both healthcare clinics and hotels. This document explains how the same technology adapts to different industries, demonstrating the platform's versatility and reliability.
+This is a flexible booking management platform that powers both healthcare clinics and hotels. This document explains how the same technology adapts to different industries, demonstrating the platform's versatility and reliability.
 
 ---
 
@@ -10,11 +10,11 @@ CarePulse is a flexible booking management platform that powers both healthcare 
 
 ### **Same Engine, Different Applications**
 
-Think of CarePulse like a Swiss Army knife—one tool with multiple functions. The same booking engine that manages patient appointments also manages hotel reservations. This isn't just convenient—it's proof of a robust, reliable system.
+Think of it like a Swiss Army knife—one tool with multiple functions. The same booking engine that manages patient appointments also manages hotel reservations. This isn't just convenient—it's proof of a robust, reliable system.
 
 ### **Why This Matters**
 
-When you choose CarePulse, you're getting:
+When you choose Northwind, you're getting:
 - ✅ **Battle-tested technology** - Proven in healthcare (where reliability is critical)
 - ✅ **Scalable architecture** - Handles both small clinics and large hotels
 - ✅ **Flexible design** - Adapts to your specific needs
