@@ -116,6 +116,9 @@ export function BookingWidget({ room }: BookingWidgetProps) {
         guestEmail: guestEmail || undefined,
         guestName: guestName || undefined,
         guestPhone: guestPhone || undefined,
+        guestsCount: sessionStorage.getItem("hotelGuestGuestsCount")
+          ? parseInt(sessionStorage.getItem("hotelGuestGuestsCount") || "1", 10)
+          : undefined,
         purpose: "Leisure",
       });
 

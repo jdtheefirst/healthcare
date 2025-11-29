@@ -23,6 +23,7 @@ import CustomFormField, { FormFieldType } from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { Form } from "../ui/form";
 import { SelectItem } from "../ui/select";
+import { toast } from "sonner";
 
 type HotelBookingFormProps = {
   guestId?: string;
@@ -80,11 +81,14 @@ export const HotelBookingForm = ({
   useEffect(() => {
     if (typeof window !== "undefined" && !propGuestEmail) {
       const storedEmail = sessionStorage.getItem("hotelGuestEmail");
+      console.log("Guest email found:", storedEmail);
       if (storedEmail) {
         setGuestEmail(storedEmail);
       }
     }
   }, [propGuestEmail]);
+
+  console.log("Guest email in booking form:", guestEmail);
 
   // Single useEffect to handle data fetching
   useEffect(() => {
@@ -259,6 +263,30 @@ export const HotelBookingForm = ({
       selectedRoomState?.$id || selectedRoomState?.id || values.roomType;
     const roomType = getRoomLabel(selectedRoomState) || values.roomType;
 
+    const guestName = sessionStorage.getItem("hotelGuestName") || undefined;
+    const guestPhone = sessionStorage.getItem("hotelGuestPhone") || undefined;
+    const purpose = (sessionStorage.getItem("hotelGuestPurpose") ||
+      "Leisure") as any;
+    const guestsCount = sessionStorage.getItem("hotelGuestGuestsCount")
+      ? parseInt(sessionStorage.getItem("hotelGuestGuestsCount") || "1", 10)
+      : undefined;
+
+    console.log("Creating booking with:", {
+      finalGuestId,
+      roomId,
+      roomType,
+      selectedHotelId,
+      checkIn: values.checkIn,
+      checkOut: values.checkOut,
+      specialRequests: values.specialRequests || "",
+      channel: values.channel || "web",
+      guestEmail,
+      guestName,
+      guestPhone,
+      purpose,
+      guestsCount,
+    });
+
     const newBooking = await createBooking({
       guestId: finalGuestId,
       roomId: roomId,
@@ -270,9 +298,10 @@ export const HotelBookingForm = ({
       specialRequests: values.specialRequests || "",
       channel: values.channel || "web",
       guestEmail: guestEmail || undefined,
-      guestName: sessionStorage.getItem("hotelGuestName") || undefined,
-      guestPhone: sessionStorage.getItem("hotelGuestPhone") || undefined,
-      purpose: "Leisure",
+      guestName: guestName,
+      guestPhone: guestPhone,
+      purpose: purpose,
+      guestsCount: guestsCount,
     });
 
     if (newBooking) {
@@ -284,7 +313,10 @@ export const HotelBookingForm = ({
         sessionStorage.removeItem("hotelGuestEmail");
         sessionStorage.removeItem("hotelGuestName");
         sessionStorage.removeItem("hotelGuestPhone");
+        sessionStorage.removeItem("hotelGuestPurpose");
+        sessionStorage.removeItem("hotelGuestGuestsCount");
       }
+      toast.success("Booking created successfully.");
       setTimeout(() => {
         router.push(`/hotel-demo/success?bookingId=${newBooking.$id}`);
       }, 2000);
@@ -323,6 +355,7 @@ export const HotelBookingForm = ({
     } catch (error) {
       console.error(`Error ${type}ing booking:`, error);
       setStatusMessage(`Error ${type}ing booking. Please try again.`);
+      toast.error(`Failed to ${type} booking. Please try again.`);
     } finally {
       setIsLoading(false);
     }
@@ -340,6 +373,7 @@ export const HotelBookingForm = ({
     <Form {...form}>
       <form
         ref={bookingFormRef}
+        id="booking-form"
         onSubmit={form.handleSubmit(onSubmit)}
         className="space-y-6 rounded-3xl border border-dark-400 bg-dark-200/80 p-2 sm:p-6 shadow-lg backdrop-blur scroll-mt-24"
       >

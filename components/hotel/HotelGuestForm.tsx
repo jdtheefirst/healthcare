@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -14,6 +13,7 @@ import CustomFormField, { FormFieldType } from "../CustomFormField";
 import SubmitButton from "../SubmitButton";
 import { Form } from "../ui/form";
 import { SelectItem } from "../ui/select";
+import { toast } from "sonner";
 
 export const HotelGuestForm = ({ scrollTo }: { scrollTo: string }) => {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -67,19 +67,44 @@ export const HotelGuestForm = ({ scrollTo }: { scrollTo: string }) => {
         setStatusMessage(
           "✓ Guest profile created! You can now proceed to booking."
         );
+        toast.success("Guest profile created successfully.");
         // Store guest ID in sessionStorage for booking form
         if (typeof window !== "undefined") {
           sessionStorage.setItem("hotelGuestId", guest.$id);
           sessionStorage.setItem("hotelGuestEmail", guest.email);
+          sessionStorage.setItem("hotelGuestName", guest.name);
+          sessionStorage.setItem("hotelGuestPhone", guest.phone);
+          sessionStorage.setItem("hotelGuestPurpose", guest.purpose);
+          sessionStorage.setItem(
+            "hotelGuestGuestsCount",
+            guest.guestsCount.toString()
+          );
         }
         // Optionally redirect or show success
         setTimeout(() => {
           setStatusMessage(null);
+
+          // Find the booking form and scroll to it
+          const bookingForm = document.getElementById("booking-form");
+          if (bookingForm) {
+            bookingForm.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+
+            // Optional: Add a visual highlight
+            bookingForm.style.transition = "all 0.3s ease";
+            bookingForm.style.boxShadow = "0 0 0 2px rgba(34, 197, 94, 0.5)";
+            setTimeout(() => {
+              bookingForm.style.boxShadow = "";
+            }, 2000);
+          }
         }, 3000);
       }
     } catch (error) {
       console.error("Error creating guest:", error);
       setStatusMessage("Error creating guest. Please try again.");
+      toast.error("Failed to create guest profile. Please try again.");
     } finally {
       setIsLoading(false);
     }

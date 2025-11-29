@@ -1,3 +1,4 @@
+// components/hotelColumns.tsx
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
@@ -6,9 +7,9 @@ import { Booking } from "@/types/appwrite.types";
 import { formatDateTime } from "@/lib/utils";
 
 import { StatusBadge } from "../StatusBadge";
-import { HotelBookingModal } from "./HotelBookingModal";
+import { ConfirmStayModal } from "../ConfirmStayModal";
+import { CancelBookingModal } from "../booking/CancelBookingModal";
 
-// Transform Appwrite Booking to display format
 export type HotelBookingRow = Booking & {
   guestName?: string;
   guestPhone?: string;
@@ -121,33 +122,22 @@ export const hotelColumns: ColumnDef<HotelBookingRow>[] = [
     header: () => <div className="pl-4">Actions</div>,
     cell: ({ row }) => {
       const booking = row.original;
-      const guest = booking.guest as any;
+
+      const handleSuccess = () => {
+        // Refresh the page to show updated status
+        window.location.reload();
+      };
 
       return (
         <div className="flex gap-1">
           {booking.status === "pending" && (
-            <HotelBookingModal
-              guestId={booking.guestId}
-              guestEmail={guest?.email}
-              booking={booking}
-              type="schedule"
-              title="Confirm Booking"
-              description="Please confirm the following details to schedule this booking."
-            />
+            <ConfirmStayModal booking={booking} onSuccess={handleSuccess} />
           )}
           {booking.status !== "cancelled" && (
-            <HotelBookingModal
-              guestId={booking.guestId}
-              guestEmail={guest?.email}
-              booking={booking}
-              type="cancel"
-              title="Cancel Booking"
-              description="Are you sure you want to cancel this booking?"
-            />
+            <CancelBookingModal booking={booking} onSuccess={handleSuccess} />
           )}
         </div>
       );
     },
   },
 ];
-

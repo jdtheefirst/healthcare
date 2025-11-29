@@ -9,6 +9,7 @@ import {
   BOOKING_COLLECTION_ID,
   BUCKET_ID,
   DATABASE_ID,
+  ENDPOINT,
   HOTEL_COLLECTION_ID,
   PROJECT_ID,
   ROOM_COLLECTION_ID,
@@ -95,7 +96,7 @@ export const createRoom = async (formData: FormData) => {
 
         // Construct the file URL
         // For Appwrite Cloud:
-        imageUrl = `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
+        imageUrl = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
 
         // For self-hosted Appwrite:
         // imageUrl = `https://your-domain/v1/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;

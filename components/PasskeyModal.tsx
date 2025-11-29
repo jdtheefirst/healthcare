@@ -67,49 +67,76 @@ export const PasskeyModal = () => {
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogContent className="shad-alert-dialog">
-        <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-start justify-between">
-            Admin Access Verification
+      <AlertDialogContent className="shad-alert-dialog max-w-[90vw] w-full mx-auto sm:max-w-md">
+        <AlertDialogHeader className="px-4 sm:px-6">
+          <AlertDialogTitle className="flex items-start justify-between text-base sm:text-lg">
+            <span className="flex-1 pr-3">Admin Access</span>
             <Image
               src="/assets/icons/close.svg"
               alt="close"
-              width={20}
-              height={20}
+              width={18}
+              height={18}
               onClick={() => closeModal()}
-              className="cursor-pointer"
+              className="cursor-pointer flex-shrink-0 mt-0.5 sm:mt-1"
             />
           </AlertDialogTitle>
-          <AlertDialogDescription>
-            To access the admin page, please enter the passkey.
+          <AlertDialogDescription className="text-xs sm:text-sm px-0">
+            Enter the passkey to access admin page
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div>
-          <InputOTP
-            maxLength={6}
-            value={passkey}
-            onChange={(value) => setPasskey(value)}
-          >
-            <InputOTPGroup className="shad-otp">
-              <InputOTPSlot className="shad-otp-slot" index={0} />
-              <InputOTPSlot className="shad-otp-slot" index={1} />
-              <InputOTPSlot className="shad-otp-slot" index={2} />
-              <InputOTPSlot className="shad-otp-slot" index={3} />
-              <InputOTPSlot className="shad-otp-slot" index={4} />
-              <InputOTPSlot className="shad-otp-slot" index={5} />
-            </InputOTPGroup>
-          </InputOTP>
+
+        <div className="px-4 sm:px-6">
+          <div className="flex justify-center">
+            <InputOTP
+              maxLength={6}
+              value={passkey}
+              onChange={(value) => {
+                setPasskey(value);
+                setError("");
+              }}
+            >
+              {/* Mobile: 2 rows of 3, Desktop: 1 row of 6 */}
+              <InputOTPGroup className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4 justify-items-center">
+                <InputOTPSlot
+                  className="shad-otp-slot w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg"
+                  index={0}
+                />
+                <InputOTPSlot
+                  className="shad-otp-slot w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg"
+                  index={1}
+                />
+                <InputOTPSlot
+                  className="shad-otp-slot w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg"
+                  index={2}
+                />
+                <InputOTPSlot
+                  className="shad-otp-slot w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg"
+                  index={3}
+                />
+                <InputOTPSlot
+                  className="shad-otp-slot w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg"
+                  index={4}
+                />
+                <InputOTPSlot
+                  className="shad-otp-slot w-10 h-10 sm:w-11 sm:h-11 text-base sm:text-lg"
+                  index={5}
+                />
+              </InputOTPGroup>
+            </InputOTP>
+          </div>
 
           {error && (
-            <p className="shad-error text-14-regular mt-4 flex justify-center">
+            <p className="shad-error text-xs sm:text-sm mt-3 text-center px-2">
               {error}
             </p>
           )}
         </div>
-        <AlertDialogFooter>
+
+        <AlertDialogFooter className="px-4 sm:px-6">
           <AlertDialogAction
             onClick={(e) => validatePasskey(e)}
-            className="shad-primary-btn w-full"
+            className="shad-primary-btn w-full py-2.5 text-sm sm:text-base"
+            disabled={passkey.length !== 6}
           >
             Enter Admin Passkey
           </AlertDialogAction>

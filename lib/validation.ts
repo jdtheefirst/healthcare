@@ -125,7 +125,12 @@ export const GuestInquirySchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z
     .string()
-    .refine((phone) => /^\+\d{10,15}$/.test(phone), "Invalid phone number"),
+    .min(5, "Phone number must be at least 5 characters")
+    .refine((phone) => {
+      // Remove all non-digit characters except + for basic validation
+      const cleaned = phone.replace(/[^\d+]/g, "");
+      return cleaned.length >= 9 && cleaned.length <= 15;
+    }, "Please enter a valid phone number"),
   guests: z.coerce
     .number({ invalid_type_error: "Guest count is required" })
     .min(1, "At least one guest is required")

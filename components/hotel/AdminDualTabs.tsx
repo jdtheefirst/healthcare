@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { HotelMetricSnapshot } from "@/constants";
 import { Appointment } from "@/types/appwrite.types";

@@ -61,10 +61,7 @@ const HotelDemoPage = async ({
         </div>
       </section>
 
-      <section
-        className="grid gap-8 lg:grid-cols-2 scroll-mt-20"
-        id="booking-form"
-      >
+      <section className="grid gap-8 lg:grid-cols-2">
         <HotelGuestForm scrollTo={scrollTo} />
         <HotelBookingForm scrollTo={scrollTo} />
       </section>

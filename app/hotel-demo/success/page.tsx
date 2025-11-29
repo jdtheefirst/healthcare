@@ -20,16 +20,10 @@ const HotelBookingSuccess = async ({ searchParams }: SearchParamProps) => {
     : null;
 
   return (
-    <div className="flex h-screen max-h-screen px-[5%]">
+    <div className="flex h-screen max-h-screen px-2 sm:px-[5%]">
       <div className="success-img">
-        <Link href="/">
-          <Image
-            src="/assets/icons/logo-full.svg"
-            height={1000}
-            width={1000}
-            alt="logo"
-            className="h-10 w-fit"
-          />
+        <Link href="/" className="flex items-center gap-2" passHref>
+          <h1 className="logo-text text-2xl sm:text-3xl">CareStay</h1>
         </Link>
 
         <section className="flex flex-col items-center">
@@ -72,8 +66,8 @@ const HotelBookingSuccess = async ({ searchParams }: SearchParamProps) => {
                   PM
                 </p>
                 <p className="text-dark-600">
-                  Check-out: {formatDateTime(booking.checkOut).dateOnly} at 11:00
-                  AM
+                  Check-out: {formatDateTime(booking.checkOut).dateOnly} at
+                  11:00 AM
                 </p>
               </div>
             </div>
@@ -95,13 +89,10 @@ const HotelBookingSuccess = async ({ searchParams }: SearchParamProps) => {
           </Button>
         </div>
 
-        <p className="copyright">
-          © {new Date().getFullYear()} CarePulse
-        </p>
+        <p className="copyright">© {new Date().getFullYear()} Northwind</p>
       </div>
     </div>
   );
 };
 
 export default HotelBookingSuccess;
-

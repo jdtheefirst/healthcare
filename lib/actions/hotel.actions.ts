@@ -16,6 +16,7 @@ import {
   users,
   messaging,
   PROJECT_ID,
+  ENDPOINT,
 } from "../appwrite.config";
 import { formatDateTime, parseStringify } from "../utils";
 import {
@@ -81,7 +82,7 @@ export const createHotel = async (formData: FormData) => {
 
         // Get the file URL (you might need to configure your domain)
         // For Appwrite Cloud, you can use:
-        imageUrl = `https://cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
+        imageUrl = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=${PROJECT_ID}`;
 
         // For self-hosted Appwrite, use your domain:
         // imageUrl = `https://your-domain/v1/storage/buckets/${BUCKET_ID}/files/${file.$id}/view?project=YOUR_PROJECT_ID`;
@@ -327,6 +328,8 @@ export const createBooking = async (booking: CreateBookingParams) => {
           phone: booking.guestPhone || "+0000000000",
           purpose: (booking.purpose || "Business") as BookingPurpose,
           guestsCount: booking.guestsCount || 1,
+          vipNotes: "",
+          consent: true,
         })) as Guest;
         guestId = newGuest.$id;
       }
@@ -427,6 +430,10 @@ export const createBooking = async (booking: CreateBookingParams) => {
       specialRequests: booking.specialRequests || "",
       channel: booking.channel || "web",
       purpose: booking.purpose || "Business",
+      guestCount: booking.guestsCount || 1,
+      guestEmail: booking.guestEmail || "",
+      guestName: booking.guestName || "",
+      guestPhone: booking.guestPhone || "",
       ...(finalHotelId && { hotelId: finalHotelId }),
     };
 
