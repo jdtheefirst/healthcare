@@ -3,6 +3,21 @@ import { withSentryConfig } from "@sentry/nextjs";
 const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
+  images: {
+    domains: [
+      "res.cloudinary.com",
+      "images.unsplash.com",
+      "lh3.googleusercontent.com",
+      "cloud.appwrite.io",
+    ],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "cloud.appwrite.io",
+        pathname: "/v1/storage/buckets/66fe44d30037c0bc0a73/files/**",
+      },
+    ],
+  },
 };
 
 export default withSentryConfig(nextConfig, {

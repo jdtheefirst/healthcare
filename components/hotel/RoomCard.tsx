@@ -22,6 +22,8 @@ export default function RoomCard({
     hotelId: room.hotelId, // Include hotelId
   };
 
+  console.log("RoomCard roomData:", roomData);
+
   return (
     <div className="rounded-3xl border border-dark-400 bg-dark-200 overflow-hidden hover:shadow-lg transition-all duration-300">
       {/* Room Image */}

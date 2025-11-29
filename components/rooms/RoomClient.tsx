@@ -53,7 +53,7 @@ export function RoomClient({ roomData }: RoomClientProps) {
     <div className="min-h-screen bg-dark-100">
       {/* Header */}
       <header className="border-b border-dark-400 bg-dark-200">
-        <div className="mx-auto max-w-7xl px-[5%] py-4">
+        <div className="mx-auto max-w-7xl px-2 sm:px-[5%] py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/rooms"
