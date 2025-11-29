@@ -8,7 +8,16 @@ export const UserFormValidation = z.object({
   email: z.string().email("Invalid email address"),
   phone: z
     .string()
-    .refine((phone) => /^\+\d{10,15}$/.test(phone), "Invalid phone number"),
+    .min(5, "Phone number must be at least 5 characters")
+    .refine((phone) => {
+      // Remove all non-digit characters except + for basic validation
+      const cleaned = phone.replace(/[^\d+]/g, "");
+      return cleaned.length >= 9 && cleaned.length <= 15;
+    }, "Please enter a valid phone number")
+    .transform((phone) => {
+      // Transform to clean format for storage (remove spaces)
+      return phone.replace(/\s/g, "");
+    }),
 });
 
 export const PatientFormValidation = z.object({
@@ -19,7 +28,16 @@ export const PatientFormValidation = z.object({
   email: z.string().email("Invalid email address"),
   phone: z
     .string()
-    .refine((phone) => /^\+\d{10,15}$/.test(phone), "Invalid phone number"),
+    .min(5, "Phone number must be at least 5 characters")
+    .refine((phone) => {
+      // Remove all non-digit characters except + for basic validation
+      const cleaned = phone.replace(/[^\d+]/g, "");
+      return cleaned.length >= 9 && cleaned.length <= 15;
+    }, "Please enter a valid phone number")
+    .transform((phone) => {
+      // Transform to clean format for storage (remove spaces)
+      return phone.replace(/\s/g, "");
+    }),
   birthDate: z.coerce.date(),
   gender: z.enum(["Male", "Female", "Other"]),
   address: z
@@ -36,10 +54,16 @@ export const PatientFormValidation = z.object({
     .max(50, "Contact name must be at most 50 characters"),
   emergencyContactNumber: z
     .string()
-    .refine(
-      (emergencyContactNumber) => /^\+\d{10,15}$/.test(emergencyContactNumber),
-      "Invalid phone number"
-    ),
+    .min(5, "Phone number must be at least 5 characters")
+    .refine((emergencyContactNumber) => {
+      // Remove all non-digit characters except + for basic validation
+      const cleaned = emergencyContactNumber.replace(/[^\d+]/g, "");
+      return cleaned.length >= 9 && cleaned.length <= 15;
+    }, "Please enter a valid phone number")
+    .transform((phone) => {
+      // Transform to clean format for storage (remove spaces)
+      return phone.replace(/\s/g, "");
+    }),
   primaryPhysician: z.string().min(2, "Select at least one doctor"),
   insuranceProvider: z
     .string()
@@ -130,7 +154,11 @@ export const GuestInquirySchema = z.object({
       // Remove all non-digit characters except + for basic validation
       const cleaned = phone.replace(/[^\d+]/g, "");
       return cleaned.length >= 9 && cleaned.length <= 15;
-    }, "Please enter a valid phone number"),
+    }, "Please enter a valid phone number")
+    .transform((phone) => {
+      // Transform to clean format for storage (remove spaces)
+      return phone.replace(/\s/g, "");
+    }),
   guests: z.coerce
     .number({ invalid_type_error: "Guest count is required" })
     .min(1, "At least one guest is required")
