@@ -110,13 +110,46 @@ export const sendSMSNotification = async (userId: string, content: string) => {
       [],
       [userId]
     );
+    //     const message = await client.functions.createExecution(
+    //   "send-sms", // your function ID
+    //   JSON.stringify({
+    //     phone: "+2547XXXXXXXX",
+    //     message: content,
+    //   })
+    // ); 0794165715
+
     return parseStringify(message);
   } catch (error) {
     console.error("An error occurred while sending sms:", error);
   }
 };
 
-//  UPDATE APPOINTMENT
+export const sendSMS = async (phone: string, message: string) => {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/send-sms`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phone: phone,
+          message: message,
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log("SMS sent successfully!");
+    } else {
+      console.error(`Error: ${data.error}`);
+    }
+  } catch (error) {
+    console.error("Failed to send SMS:", error);
+  }
+};
+
 export const updateAppointment = async ({
   appointmentId,
   userId,
@@ -125,23 +158,55 @@ export const updateAppointment = async ({
   type,
 }: UpdateAppointmentParams) => {
   try {
-    // Update appointment to scheduled -> https://appwrite.io/docs/references/cloud/server-nodejs/databases#updateDocument
-    const updatedAppointment = await databases.updateDocument(
+    // Update appointment
+    const updatedAppointment = (await databases.updateDocument(
       DATABASE_ID!,
       APPOINTMENT_COLLECTION_ID!,
       appointmentId,
       appointment
-    );
+    )) as unknown as Appointment;
 
     if (!updatedAppointment) throw Error;
 
-    const smsMessage = `Greetings from CarePulse. ${type === "schedule" ? `Your appointment is confirmed for ${formatDateTime(appointment.schedule!, timeZone).dateTime} with Dr. ${appointment.primaryPhysician}` : `We regret to inform that your appointment for ${formatDateTime(appointment.schedule!, timeZone).dateTime} is cancelled. Reason:  ${appointment.cancellationReason}`}.`;
-    await sendSMSNotification(userId, smsMessage);
+    // Create SMS message
+    const smsMessage = `Greetings from CarePulse. ${
+      type === "schedule"
+        ? `Your appointment is confirmed for ${formatDateTime(appointment.schedule!, timeZone).dateTime} with Dr. ${appointment.primaryPhysician}`
+        : `We regret to inform that your appointment for ${formatDateTime(appointment.schedule!, timeZone).dateTime} is cancelled. Reason: ${appointment.cancellationReason}`
+    }.`;
+
+    console.log("📱 Attempting to send SMS for appointment update:", {
+      appointmentId,
+      patientPhone: updatedAppointment.patient?.phone, // Check updated appointment
+      type,
+      message: smsMessage,
+    });
+
+    // Get phone number from patient object
+    const phoneNumber = updatedAppointment.patient?.phone;
+
+    // Send SMS if phone number exists
+    if (phoneNumber) {
+      try {
+        await sendSMS(phoneNumber, smsMessage);
+        console.log("✅ SMS sent successfully for appointment update");
+      } catch (smsError: any) {
+        console.warn(
+          "⚠️ SMS notification failed (non-critical):",
+          smsError.message
+        );
+        // Don't throw - SMS failure shouldn't break appointment update
+      }
+    } else {
+      console.warn("⚠️ No phone number found in patient record, skipping SMS");
+      console.log("Patient data:", updatedAppointment.patient);
+    }
 
     revalidatePath("/admin");
     return parseStringify(updatedAppointment);
   } catch (error) {
     console.error("An error occurred while scheduling an appointment:", error);
+    throw error;
   }
 };
 

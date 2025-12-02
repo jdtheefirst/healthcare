@@ -4,12 +4,6 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
   images: {
-    domains: [
-      "res.cloudinary.com",
-      "images.unsplash.com",
-      "lh3.googleusercontent.com",
-      "cloud.appwrite.io",
-    ],
     remotePatterns: [
       {
         protocol: "https",

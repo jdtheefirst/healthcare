@@ -26,6 +26,7 @@ import {
   Room,
   UpdateBookingParams,
 } from "@/types/appwrite.types";
+import { sendSMS } from "./appointment.actions";
 
 // CREATE HOTEL
 export const createHotel = async (formData: FormData) => {
@@ -283,6 +284,10 @@ export const createGuest = async (guest: CreateGuestParams) => {
       }
     );
 
+    // sms message to guest can be sent after booking creation
+    const message = `Hello ${guest.name}, your guest profile has been created successfully. You can now make bookings at our hotels. Thank you!`;
+    await sendSMS(guest.phone, message);
+
     return parseStringify(newGuest);
   } catch (error) {
     console.error("An error occurred while creating a new guest:", error);
@@ -313,6 +318,7 @@ export const createBooking = async (booking: CreateBookingParams) => {
   try {
     // First, get or create guest if guestId not provided
     let guestId = booking.guestId;
+    let guestData: Guest | null = null;
 
     if (!guestId && booking.guestEmail) {
       const existingGuest = (await getGuestByEmail(
@@ -320,6 +326,7 @@ export const createBooking = async (booking: CreateBookingParams) => {
       )) as Guest | null;
       if (existingGuest) {
         guestId = existingGuest.$id;
+        guestData = existingGuest; // ✅ Already have the guest data
       } else {
         // Create guest on the fly with required fields
         const newGuest = (await createGuest({
@@ -332,7 +339,15 @@ export const createBooking = async (booking: CreateBookingParams) => {
           consent: true,
         })) as Guest;
         guestId = newGuest.$id;
+        guestData = newGuest; // ✅ Already have the guest data
       }
+    } else if (guestId) {
+      // If guestId was provided, we need to fetch the guest
+      guestData = (await databases.getDocument(
+        DATABASE_ID!,
+        GUEST_COLLECTION_ID!,
+        guestId
+      )) as unknown as Guest;
     }
 
     if (!guestId) {
@@ -448,6 +463,19 @@ export const createBooking = async (booking: CreateBookingParams) => {
     )) as unknown as Booking;
 
     console.log("✅ Booking created successfully:", newBooking.$id);
+
+    // Send SMS notification WITHOUT fetching guest again
+    if (guestData) {
+      const message = `Hello ${guestData.name}, your booking from ${
+        formatDateTime(new Date(newBooking.checkIn), "UTC").dateTime
+      } to ${
+        formatDateTime(new Date(newBooking.checkOut), "UTC").dateTime
+      } has been received and is currently ${newBooking.status}. Thank you for choosing our service!`;
+
+      await sendSMS(guestData.phone, message);
+    } else {
+      console.warn("⚠️ Could not send SMS: guest data not available");
+    }
 
     revalidatePath("/admin/dashboard");
     revalidatePath("/hotel-demo");
@@ -670,6 +698,7 @@ export const updateBooking = async ({
         : `We regret to inform that your booking for ${checkInDate} is cancelled. Reason: ${booking.cancellationReason || "Not specified"}.`;
 
     await sendHotelSMSNotification(guest as Guest, smsMessage);
+    await sendSMS(guest.phone, smsMessage);
 
     revalidatePath("/admin/dashboard");
     return parseStringify(updatedBooking);

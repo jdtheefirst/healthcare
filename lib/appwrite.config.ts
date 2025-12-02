@@ -13,6 +13,7 @@ export const {
   BOOKING_COLLECTION_ID,
   GUEST_COLLECTION_ID,
   NEXT_PUBLIC_BUCKET_ID: BUCKET_ID,
+  FUNCTION_ID,
 } = process.env;
 
 const client = new sdk.Client();
@@ -23,3 +24,4 @@ export const databases = new sdk.Databases(client);
 export const users = new sdk.Users(client);
 export const messaging = new sdk.Messaging(client);
 export const storage = new sdk.Storage(client);
+export const functions = new sdk.Functions(client);
